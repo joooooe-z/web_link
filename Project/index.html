@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onerway Payment Link Demo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="css/lite-main.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="img/logo.png" alt="Onerway Logo" class="logo">
+            <h1>Onerway Payment Link Demo</h1>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h3>Payment Link 演示系统</h3>
+                <p>
+                    这是一个轻量级演示系统，展示 Onerway Payment Link 的核心功能。<br>
+                    您可以创建支付链接，管理链接，以及测试支付流程。
+                </p>
+                <div class="buttons">
+                    <a href="merchant/dashboard.html" class="pure-button primary-button">
+                        商户管理界面
+                    </a>
+                    <a href="#" class="pure-button secondary-button" id="resetDemo">
+                        重置演示数据
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.getElementById('resetDemo').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('确定要重置所有演示数据吗？这将删除所有创建的链接和交易记录。')) {
+                resetAllData();
+                alert('演示数据已重置！');
+            }
+        });
+    </script>
+</body>
+</html>

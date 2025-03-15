@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商户控制台 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="../css/lite-main.css">
+</head>
+<body>
+    <div class="nav-container">
+        <div class="container">
+            <ul class="nav">
+                <li class="nav-item"><a class="nav-link active" href="dashboard.html">控制台</a></li>
+                <li class="nav-item"><a class="nav-link" href="manage-links.html">管理链接</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header-actions">
+            <h2>控制台</h2>
+            <div class="dropdown">
+                <button id="createLinkBtn" class="pure-button primary-button dropdown-toggle">
+                    创建新链接 <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" class="dropdown-item" id="createPaymentLink">支付链接</a>
+                    <a href="#" class="dropdown-item" id="createManualPayment">手动付款</a>
+                    <a href="#" class="dropdown-item" id="createDynamicPayment">动态金额付款</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 数据概览 -->
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-content">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <h3 id="totalLinks">0</h3>
+                                <p>活跃链接</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-content">
+                            <div class="stat-icon">👁️</div>
+                            <div class="stat-info">
+                                <h3 id="totalVisits">0</h3>
+                                <p>总访问</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="stat-content">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-info">
+                                <h3 id="totalConversions">0</h3>
+                                <p>成功支付</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最近链接 -->
+        <div class="card">
+            <div class="card-header">
+                <h3>最近链接</h3>
+                <a href="manage-links.html" class="pure-button secondary-button">查看全部</a>
+            </div>
+            <div class="card-body">
+                <table class="pure-table pure-table-bordered">
+                    <thead>
+                        <tr>
+                            <th>商品编号</th>
+                            <th>名称</th>
+                            <th>金额</th>
+                            <th>创建日期</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentLinksTable">
+                        <tr>
+                            <td colspan="4" class="text-center">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 最近交易 -->
+        <div class="card">
+            <div class="card-header">
+                <h3>最近交易</h3>
+            </div>
+            <div class="card-body">
+                <table class="pure-table pure-table-bordered">
+                    <thead>
+                        <tr>
+                            <th>交易ID</th>
+                            <th>商品名称</th>
+                            <th>金额</th>
+                            <th>支付方式</th>
+                            <th>日期</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentTransactionsTable">
+                        <tr>
+                            <td colspan="4" class="text-center">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在控制台页面添加创建链接模态框 -->
+    <div id="createLinkModal" class="pure-modal">
+        <div class="pure-modal-overlay" onclick="closeModal()"></div>
+        <div class="pure-modal-container">
+            <div class="pure-modal-header">
+                <h4>创建支付链接</h4>
+                <button class="pure-modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="pure-modal-body">
+                <form id="createLinkForm" class="pure-form pure-form-stacked">
+                    <!-- 基础信息 -->
+                    <h5>基础信息</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label for="title">商品名称 *</label>
+                        <input type="text" id="title" class="form-control" required maxlength="50">
+                        <small>最多50个字符</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">商品描述</label>
+                        <textarea id="description" class="form-control" rows="3" maxlength="200"></textarea>
+                        <small>最多200个字符，描述仅显示在商户管理界面，不会展示给客户。</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="image">商品图片</label>
+                        <input type="file" id="image" class="form-control" accept="image/png, image/jpeg">
+                        <small>支持JPG/PNG，最大2MB</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productCode">商品编号 *</label>
+                        <input type="text" id="productCode" class="form-control" required maxlength="20">
+                        <small>输入唯一商品编号，不可重复</small>
+                    </div>
+                    
+                    <!-- 金额设置 -->
+                    <h5 style="margin-top: 20px;">金额设置 *</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <label class="pure-radio">
+                                    <input type="radio" name="amountType" value="FIXED" checked> 固定金额
+                                </label>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <label class="pure-radio">
+                                    <input type="radio" name="amountType" value="DYNAMIC"> 客户自定义金额
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="fixedAmountFields">
+                        <div class="pure-g">
+                            <div class="pure-u-1-3">
+                                <div class="form-group">
+                                    <label for="amount">单价 *</label>
+                                    <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                            <div class="pure-u-1-3">
+                                <div class="form-group">
+                                    <label for="quantity">商品数量 *</label>
+                                    <input type="number" id="quantity" class="form-control" min="1" value="1" required>
+                                </div>
+                            </div>
+                            <div class="pure-u-1-3">
+                                <div class="form-group">
+                                    <label for="currency">货币 *</label>
+                                    <select id="currency" class="form-control" required>
+                                        <option value="USD">美元 (USD)</option>
+                                        <option value="EUR">欧元 (EUR)</option>
+                                        <option value="JPY">日元 (JPY)</option>
+                                        <option value="CNY">人民币 (CNY)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dynamicAmountFields" style="display: none;">
+                        <div class="pure-g">
+                            <div class="pure-u-1-3">
+                                <div class="form-group">
+                                    <label for="minAmount">最小金额</label>
+                                    <input type="number" id="minAmount" class="form-control" step="0.01" min="0.01">
+                                </div>
+                            </div>
+                            <div class="pure-u-1-3">
+                                <div class="form-group">
+                                    <label for="maxAmount">最大金额</label>
+                                    <input type="number" id="maxAmount" class="form-control" step="0.01" min="0.01">
+                                </div>
+                            </div>
+                            <div class="pure-u-1-3">
+                                <div class="form-group">
+                                    <label for="dynamicCurrency">货币 *</label>
+                                    <select id="dynamicCurrency" class="form-control" required>
+                                        <option value="USD">美元 (USD)</option>
+                                        <option value="EUR">欧元 (EUR)</option>
+                                        <option value="JPY">日元 (JPY)</option>
+                                        <option value="CNY">人民币 (CNY)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 高级设置 -->
+                    <h5 style="margin-top: 20px;">高级设置</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label>有效期设置</label>
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <label class="pure-radio">
+                                    <input type="radio" name="validityType" value="PERMANENT" checked> 永久有效
+                                </label>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <label class="pure-radio">
+                                    <input type="radio" name="validityType" value="FIXED"> 设置有效期
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="validityFields" style="display: none;">
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="endDate">截止日期</label>
+                                    <input type="date" id="endDate" class="form-control">
+                                </div>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="maxUsage">使用次数限制</label>
+                                    <input type="number" id="maxUsage" class="form-control" min="1" max="1000">
+                                    <small>留空表示不限制次数</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>支付方式</label>
+                        <div class="alert alert-info">
+                            默认支持所有可用的支付方式，包括信用卡支付、Apple Pay和本地支付方式。
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="pure-modal-footer">
+                <button type="button" class="pure-button secondary-button" onclick="closeModal()">取消</button>
+                <button type="button" class="pure-button primary-button" id="submitLinkForm">创建链接</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在页面底部添加手动付款模态框 -->
+    <div id="manualPaymentModal" class="pure-modal">
+        <div class="pure-modal-overlay" onclick="closeManualModal()"></div>
+        <div class="pure-modal-container">
+            <div class="pure-modal-header">
+                <h4>手动付款</h4>
+                <button class="pure-modal-close" onclick="closeManualModal()">×</button>
+            </div>
+            <div class="pure-modal-body">
+                <form id="manualPaymentForm" class="pure-form pure-form-stacked">
+                    <!-- 商品信息 -->
+                    <h5>商品信息</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label for="manual_title">商品名称 *</label>
+                        <input type="text" id="manual_title" class="form-control" required maxlength="50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manual_productCode">商品编号 *</label>
+                        <input type="text" id="manual_productCode" class="form-control" required maxlength="20">
+                        <small>输入唯一商品编号，不可重复</small>
+                    </div>
+                    
+                    <div class="pure-g">
+                        <div class="pure-u-1-2">
+                            <div class="form-group">
+                                <label for="manual_amount">金额 *</label>
+                                <input type="number" id="manual_amount" class="form-control" step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <div class="pure-u-1-2">
+                            <div class="form-group">
+                                <label for="manual_currency">货币 *</label>
+                                <select id="manual_currency" class="form-control" required>
+                                    <option value="USD">美元 (USD)</option>
+                                    <option value="EUR">欧元 (EUR)</option>
+                                    <option value="JPY">日元 (JPY)</option>
+                                    <option value="CNY">人民币 (CNY)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 客户信息 -->
+                    <h5 style="margin-top: 20px;">客户信息</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label for="customer_name">客户姓名 *</label>
+                        <input type="text" id="customer_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customer_email">客户邮箱</label>
+                        <input type="email" id="customer_email" class="form-control">
+                    </div>
+                    
+                    <!-- 卡片信息 -->
+                    <h5 style="margin-top: 20px;">支付卡信息</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label for="card_number">卡号 *</label>
+                        <input type="text" id="card_number" class="form-control" required placeholder="XXXX XXXX XXXX XXXX">
+                    </div>
+                    
+                    <div class="pure-g">
+                        <div class="pure-u-1-2">
+                            <div class="form-group">
+                                <label for="card_expiry">有效期 *</label>
+                                <input type="text" id="card_expiry" class="form-control" required placeholder="MM/YY">
+                            </div>
+                        </div>
+                        <div class="pure-u-1-2">
+                            <div class="form-group">
+                                <label for="card_cvc">安全码 *</label>
+                                <input type="text" id="card_cvc" class="form-control" required placeholder="CVC">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="pure-modal-footer">
+                <button type="button" class="pure-button secondary-button" onclick="closeManualModal()">取消</button>
+                <button type="button" class="pure-button primary-button" id="submitManualPayment">处理付款</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 在页面底部添加动态金额付款模态框 -->
+    <div id="dynamicPaymentModal" class="pure-modal">
+        <div class="pure-modal-overlay" onclick="closeDynamicModal()"></div>
+        <div class="pure-modal-container">
+            <div class="pure-modal-header">
+                <h4>创建动态金额付款链接</h4>
+                <button class="pure-modal-close" onclick="closeDynamicModal()">×</button>
+            </div>
+            <div class="pure-modal-body">
+                <form id="dynamicPaymentForm" class="pure-form pure-form-stacked">
+                    <!-- 基础信息 -->
+                    <h5>基础信息</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label for="dynamic_title">商品名称 *</label>
+                        <input type="text" id="dynamic_title" class="form-control" required maxlength="50">
+                        <small>最多50个字符</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dynamic_description">商品描述</label>
+                        <textarea id="dynamic_description" class="form-control" rows="3" maxlength="200"></textarea>
+                        <small>最多200个字符，描述仅显示在商户管理界面</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dynamic_productCode">商品编号 *</label>
+                        <input type="text" id="dynamic_productCode" class="form-control" required maxlength="20">
+                        <small>输入唯一商品编号，不可重复</small>
+                    </div>
+                    
+                    <!-- 金额设置 -->
+                    <h5 style="margin-top: 20px;">金额设置</h5>
+                    <hr>
+                    
+                    <div class="pure-g">
+                        <div class="pure-u-1-3">
+                            <div class="form-group">
+                                <label for="dynamic_minAmount">最小金额</label>
+                                <input type="number" id="dynamic_minAmount" class="form-control" step="0.01" min="0.01">
+                            </div>
+                        </div>
+                        <div class="pure-u-1-3">
+                            <div class="form-group">
+                                <label for="dynamic_maxAmount">最大金额</label>
+                                <input type="number" id="dynamic_maxAmount" class="form-control" step="0.01" min="0.01">
+                            </div>
+                        </div>
+                        <div class="pure-u-1-3">
+                            <div class="form-group">
+                                <label for="dynamic_currency">货币 *</label>
+                                <select id="dynamic_currency" class="form-control" required>
+                                    <option value="USD">美元 (USD)</option>
+                                    <option value="EUR">欧元 (EUR)</option>
+                                    <option value="JPY">日元 (JPY)</option>
+                                    <option value="CNY">人民币 (CNY)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 高级设置 -->
+                    <h5 style="margin-top: 20px;">高级设置</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label>有效期设置</label>
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <label class="pure-radio">
+                                    <input type="radio" name="dynamic_validityType" value="PERMANENT" checked> 永久有效
+                                </label>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <label class="pure-radio">
+                                    <input type="radio" name="dynamic_validityType" value="FIXED"> 设置有效期
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dynamicValidityFields" style="display: none;">
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="dynamic_endDate">截止日期</label>
+                                    <input type="date" id="dynamic_endDate" class="form-control">
+                                </div>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="dynamic_maxUsage">使用次数限制</label>
+                                    <input type="number" id="dynamic_maxUsage" class="form-control" min="1" max="1000">
+                                    <small>留空表示不限制次数</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>支付方式</label>
+                        <div class="alert alert-info">
+                            默认支持所有可用的支付方式，包括信用卡支付、Apple Pay和本地支付方式。
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="pure-modal-footer">
+                <button type="button" class="pure-button secondary-button" onclick="closeDynamicModal()">取消</button>
+                <button type="button" class="pure-button primary-button" id="submitDynamicPayment">创建链接</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
+    <script src="../js/storage.js"></script>
+    <script>
+        // 添加以下函数来处理模态框和下拉菜单
+        function showModal() {
+            document.getElementById('createLinkModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+        
+        function closeModal() {
+            document.getElementById('createLinkModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+        
+        function showManualModal() {
+            document.getElementById('manualPaymentModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+        
+        function closeManualModal() {
+            document.getElementById('manualPaymentModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+        
+        function showDynamicModal() {
+            document.getElementById('dynamicPaymentModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+        
+        function closeDynamicModal() {
+            document.getElementById('dynamicPaymentModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+        
+        // 切换下拉菜单显示状态
+        function toggleDropdown() {
+            document.querySelector('.dropdown-menu').classList.toggle('show');
+        }
+        
+        // 点击其他区域关闭下拉菜单
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropdown-toggle') && !event.target.matches('.dropdown-arrow')) {
+                var dropdowns = document.getElementsByClassName('dropdown-menu');
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 统计数据
+            const links = getAllLinks();
+            const activeLinks = links.filter(link => link.status === 'ACTIVE');
+            const transactions = getAllTransactions();
+            
+            let totalVisits = 0;
+            let totalConversions = 0;
+            
+            links.forEach(link => {
+                totalVisits += link.stats.visits || 0;
+                totalConversions += link.stats.conversions || 0;
+            });
+            
+            document.getElementById('totalLinks').textContent = activeLinks.length;
+            document.getElementById('totalVisits').textContent = totalVisits;
+            document.getElementById('totalConversions').textContent = totalConversions;
+            
+            // 最近链接
+            const recentLinksTable = document.getElementById('recentLinksTable');
+            recentLinksTable.innerHTML = '';
+            
+            if (links.length === 0) {
+                recentLinksTable.innerHTML = '<tr><td colspan="4" class="text-center">暂无数据</td></tr>';
+            } else {
+                const recentLinks = [...links].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+                
+                recentLinks.forEach(link => {
+                    const amountText = link.amount.type === 'FIXED' 
+                        ? formatAmount(link.amount.totalValue || link.amount.value, link.amount.currency)
+                        : '动态金额';
+                    
+                    const statusBadge = link.status === 'ACTIVE' 
+                        ? '<span class="badge badge-success">活跃</span>'
+                        : link.status === 'DISABLED'
+                            ? '<span class="badge badge-secondary">已禁用</span>'
+                            : '<span class="badge badge-danger">已过期</span>';
+                    
+                    recentLinksTable.innerHTML += `
+                        <tr>
+                            <td>${link.productCode || '无'}</td>
+                            <td><a href="link-details.html?id=${link.id}">${link.title}</a></td>
+                            <td>${amountText}</td>
+                            <td>${formatDate(link.createdAt)}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            // 最近交易
+            const recentTransactionsTable = document.getElementById('recentTransactionsTable');
+            recentTransactionsTable.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                recentTransactionsTable.innerHTML = '<tr><td colspan="4" class="text-center">暂无数据</td></tr>';
+            } else {
+                const recentTransactions = [...transactions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+                
+                recentTransactions.forEach(transaction => {
+                    recentTransactionsTable.innerHTML += `
+                        <tr>
+                            <td>${transaction.id.substring(0, 8)}...</td>
+                            <td>${transaction.productTitle || '未知商品'}</td>
+                            <td>${formatAmount(transaction.amount, transaction.currency)}</td>
+                            <td>${transaction.paymentMethod}</td>
+                            <td>${formatDate(transaction.createdAt)}</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            // 实时更新预览
+            document.getElementById('title').addEventListener('input', function() {
+                document.getElementById('previewTitle').textContent = this.value || '链接标题';
+            });
+            
+            document.getElementById('amount').addEventListener('input', function() {
+                const amount = parseFloat(this.value) || 0;
+                const currency = document.getElementById('currency').value;
+                const formattedAmount = new Intl.NumberFormat('zh-CN', { 
+                    style: 'currency', 
+                    currency: currency 
+                }).format(amount);
+                
+                document.getElementById('previewPrice').textContent = formattedAmount;
+                document.getElementById('previewTotal').textContent = formattedAmount;
+            });
+            
+            document.getElementById('currency').addEventListener('change', function() {
+                const amount = parseFloat(document.getElementById('amount').value) || 0;
+                const currency = this.value;
+                const formattedAmount = new Intl.NumberFormat('zh-CN', { 
+                    style: 'currency', 
+                    currency: currency 
+                }).format(amount);
+                
+                document.getElementById('previewPrice').textContent = formattedAmount;
+                document.getElementById('previewTotal').textContent = formattedAmount;
+            });
+            
+            // 金额类型切换
+            document.querySelectorAll('input[name="amountType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'FIXED') {
+                        document.getElementById('fixedAmountFields').style.display = 'block';
+                        document.getElementById('dynamicAmountFields').style.display = 'none';
+                    } else {
+                        document.getElementById('fixedAmountFields').style.display = 'none';
+                        document.getElementById('dynamicAmountFields').style.display = 'block';
+                    }
+                });
+            });
+            
+            // 有效期类型切换
+            document.querySelectorAll('input[name="validityType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'PERMANENT') {
+                        document.getElementById('validityFields').style.display = 'none';
+                    } else {
+                        document.getElementById('validityFields').style.display = 'block';
+                    }
+                });
+            });
+            
+            // 下拉菜单点击事件
+            document.getElementById('createLinkBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleDropdown();
+            });
+            
+            // 支付链接选项点击事件
+            document.getElementById('createPaymentLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('.dropdown-menu').classList.remove('show');
+                showModal();
+            });
+            
+            // 手动付款选项点击事件
+            document.getElementById('createManualPayment').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('.dropdown-menu').classList.remove('show');
+                showManualModal();
+            });
+            
+            // 动态金额付款选项点击事件
+            document.getElementById('createDynamicPayment').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('.dropdown-menu').classList.remove('show');
+                showDynamicModal();
+            });
+            
+            // 动态金额有效期类型切换
+            document.querySelectorAll('input[name="dynamic_validityType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'PERMANENT') {
+                        document.getElementById('dynamicValidityFields').style.display = 'none';
+                    } else {
+                        document.getElementById('dynamicValidityFields').style.display = 'block';
+                    }
+                });
+            });
+            
+            // 处理手动付款提交
+            document.getElementById('submitManualPayment').addEventListener('click', function() {
+                const form = document.getElementById('manualPaymentForm');
+                
+                // 验证表单
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // 在实际应用中，这里会处理信用卡付款
+                // 当前演示版本，我们只是记录一个交易
+                
+                // 创建一个简单的链接对象用于记录交易
+                const productCode = document.getElementById('manual_productCode').value;
+                // 检查商品编号唯一性
+                const links = getAllLinks();
+                if (links.some(link => link.productCode === productCode)) {
+                    alert('商品编号已存在，请使用唯一的商品编号');
+                    return;
+                }
+                
+                const link = {
+                    title: document.getElementById('manual_title').value,
+                    description: "手动付款交易",
+                    productCode: productCode,
+                    amount: {
+                        type: 'FIXED',
+                        currency: document.getElementById('manual_currency').value,
+                        value: parseFloat(document.getElementById('manual_amount').value),
+                        quantity: 1
+                    },
+                    validity: {
+                        type: 'PERMANENT'
+                    },
+                    paymentMethods: ["credit_card"]
+                };
+                
+                link.amount.totalValue = link.amount.value;
+                
+                // 保存链接
+                const savedLink = saveLink(link);
+                
+                // 记录交易
+                const transaction = {
+                    linkId: savedLink.id,
+                    merchantId: 'demo_merchant',
+                    amount: link.amount.value,
+                    currency: link.amount.currency,
+                    paymentMethod: 'card',
+                    status: 'completed',
+                    customerInfo: {
+                        email: document.getElementById('customer_email').value,
+                        name: document.getElementById('customer_name').value,
+                        card: '****' + document.getElementById('card_number').value.slice(-4)
+                    }
+                };
+                
+                recordTransaction(transaction);
+                
+                closeManualModal();
+                
+                alert('手动付款已成功处理！');
+                location.reload();
+            });
+            
+            // 处理动态金额链接提交
+            document.getElementById('submitDynamicPayment').addEventListener('click', function() {
+                const form = document.getElementById('dynamicPaymentForm');
+                
+                // 验证表单
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // 检查商品编号唯一性
+                const productCode = document.getElementById('dynamic_productCode').value;
+                const links = getAllLinks();
+                if (links.some(link => link.productCode === productCode)) {
+                    alert('商品编号已存在，请使用唯一的商品编号');
+                    return;
+                }
+                
+                const validityType = document.querySelector('input[name="dynamic_validityType"]:checked').value;
+                
+                // 构建链接对象
+                const link = {
+                    title: document.getElementById('dynamic_title').value,
+                    description: document.getElementById('dynamic_description').value,
+                    productCode: productCode,
+                    amount: {
+                        type: 'DYNAMIC',
+                        currency: document.getElementById('dynamic_currency').value,
+                        minValue: parseFloat(document.getElementById('dynamic_minAmount').value) || 0.01,
+                        maxValue: parseFloat(document.getElementById('dynamic_maxAmount').value) || 9999.99
+                    },
+                    validity: {
+                        type: validityType
+                    },
+                    paymentMethods: ["credit_card", "apple_pay", "local_payments"]
+                };
+                
+                if (validityType === 'FIXED') {
+                    link.validity.endTime = document.getElementById('dynamic_endDate').value;
+                    link.validity.maxUsage = parseInt(document.getElementById('dynamic_maxUsage').value) || null;
+                }
+                
+                // 保存链接
+                const savedLink = saveLink(link);
+                
+                // 生成支付链接URL
+                const paymentUrl = `${window.location.origin}${window.location.pathname.replace('/merchant/dashboard.html', '')}/customer/payment.html?id=${savedLink.shortId}`;
+                
+                closeDynamicModal();
+                
+                // 显示成功提示并跳转到管理链接页面
+                alert(`动态金额付款链接已创建成功！\n链接: ${paymentUrl}`);
+                window.location.href = 'manage-links.html';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+/* 基础样式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo {
+    max-width: 180px;
+    margin-bottom: 15px;
+}
+
+/* 卡片样式 */
+.card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 15px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* 按钮样式 */
+.pure-button {
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin: 5px;
+}
+
+.primary-button {
+    background-color: #0066FF;
+    color: white;
+}
+
+.secondary-button {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+.danger-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.buttons {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* 表格样式 */
+.pure-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.pure-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* 表单样式 */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* 工具类 */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* 导航样式 */
+.nav-container {
+    background-color: #0066FF;
+    margin-bottom: 20px;
+}
+
+.nav {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    padding: 15px;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+}
+
+.nav-link.active {
+    font-weight: bold;
+}
+
+/* 响应式网格 */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+}
+
+.col {
+    flex: 1;
+    padding: 0 10px;
+    min-width: 300px;
+}
+
+/* 支付相关样式 */
+.payment-method {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.payment-method:hover {
+    border-color: #0066FF;
+}
+
+.payment-method.selected {
+    border-color: #0066FF;
+    background-color: rgba(0, 102, 255, 0.05);
+}
+
+/* 添加商品详情样式 */
+.payment-amount-details {
+    margin: 15px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #f9fafb;
+}
+
+.amount-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dotted #e5e7eb;
+}
+
+.amount-row.total {
+    border-bottom: none;
+    font-weight: 600;
+    font-size: 18px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* 模态框样式 */
+.pure-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+}
+
+.pure-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+}
+
+.pure-modal-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.pure-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.pure-modal-body {
+    padding: 20px;
+}
+
+.pure-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 10;
+}
+
+.pure-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* 适配表单样式 */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* 修复Pure CSS的一些限制 */
+.pure-u-1-2, .pure-u-1-3 {
+    box-sizing: border-box;
+    padding: 0 10px;
+}
+
+.pure-radio {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.pure-radio input {
+    margin-right: 8px;
+}
+
+.alert {
+    padding: 12px 15px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.alert-info {
+    background-color: #e0f2fe;
+    border: 1px solid #b6e0fe;
+    color: #0066cc;
+}
+
+/* 确保滚动正常工作 */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* 下拉菜单样式 */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+    position: relative;
+    padding-right: 25px !important;
+}
+
+.dropdown-arrow {
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 4px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.175);
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 8px 15px;
+    clear: both;
+    font-weight: 400;
+    color: #333;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f5;
+    color: #0066FF;
+}
+
+/* 增强动态输入组件样式 */
+.dynamic-input-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #0066FF;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dynamic-input-container:focus-within {
+    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.25);
+}
+
+#dynamicCurrency {
+    width: 60px;
+    padding: 8px;
+    border: none;
+    background-color: #f0f5ff;
+    outline: none;
+}
+
+#dynamicAmount {
+    width: 90px;
+    padding: 8px;
+    border: none;
+    outline: none;
+}
+
+#dynamicAmount::-webkit-outer-spin-button,
+#dynamicAmount::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#dynamicAmount {
+    -moz-appearance: textfield;
+} 

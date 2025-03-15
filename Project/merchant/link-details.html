@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>链接详情 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/merchant.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="dashboard.html">Onerway 商户中心</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">控制台</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="manage-links.html">管理链接</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="dashboard.html">控制台</a></li>
+                        <li class="breadcrumb-item"><a href="manage-links.html">管理链接</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">链接详情</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0" id="linkTitle">加载中...</h4>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary" id="shareBtn">
+                                <i class="bi bi-share"></i> 分享
+                            </button>
+                            <button class="btn btn-outline-secondary" id="toggleStatusBtn">
+                                <i class="bi bi-pause-circle"></i> 禁用
+                            </button>
+                            <button class="btn btn-outline-danger" id="deleteBtn">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>基本信息</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>状态</span>
+                                        <span id="linkStatus" class="badge bg-success">活跃</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>创建时间</span>
+                                        <span id="linkCreatedAt">--</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>金额类型</span>
+                                        <span id="linkAmountType">--</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>金额</span>
+                                        <span id="linkAmount">--</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>有效期</span>
+                                        <span id="linkValidityType">--</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>截止时间</span>
+                                        <span id="linkEndTime">--</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>商品编号</span>
+                                        <span id="linkProductCode">--</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="productImage" class="text-center mb-3">
+                                    <!-- 商品图片将在这里显示 -->
+                                </div>
+                                <p id="linkDescription" class="text-muted">加载中...</p>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row link-stats">
+                            <div class="col-md-4">
+                                <div class="stat-item">
+                                    <div class="stat-number" id="linkVisits">0</div>
+                                    <div class="stat-label">总访问次数</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-item">
+                                    <div class="stat-number" id="linkConversions">0</div>
+                                    <div class="stat-label">支付次数</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-item">
+                                    <div class="stat-number" id="linkTotalAmount">¥0.00</div>
+                                    <div class="stat-label">总收款金额</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <canvas id="transactionsChart" height="200"></canvas>
+                            </div>
+                        </div>
+                        
+                        <h5>交易记录</h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>交易ID</th>
+                                        <th>金额</th>
+                                        <th>支付方式</th>
+                                        <th>时间</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsTable">
+                                    <tr>
+                                        <td colspan="5" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">收款链接</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="paymentLinkUrl" readonly>
+                                <button class="btn btn-outline-primary" type="button" id="copyLinkBtn">
+                                    <i class="bi bi-clipboard"></i> 复制链接
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <div id="linkQrCode" class="d-inline-block"></div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="#" class="btn btn-primary" id="testLinkBtn">
+                                <i class="bi bi-box-arrow-up-right"></i> 测试链接
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分享模态框 -->
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">分享支付链接</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>通过以下方式分享您的支付链接：</p>
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary" id="shareWhatsapp">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
+                        </a>
+                        <a href="#" class="btn btn-outline-primary" id="shareEmail">
+                            <i class="bi bi-envelope"></i> 电子邮件
+                        </a>
+                        <a href="#" class="btn btn-outline-primary" id="shareFacebook">
+                            <i class="bi bi-facebook"></i> Facebook
+                        </a>
+                        <a href="#" class="btn btn-outline-primary" id="shareTwitter">
+                            <i class="bi bi-twitter"></i> Twitter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/storage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取链接ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            
+            if (!id) {
+                window.location.href = 'manage-links.html';
+                return;
+            }
+            
+            // 获取链接信息
+            const link = getLink(id);
+            
+            if (!link) {
+                alert('链接不存在');
+                window.location.href = 'manage-links.html';
+                return;
+            }
+            
+            // 设置标题和描述
+            document.getElementById('linkTitle').textContent = link.title;
+            document.getElementById('linkDescription').textContent = link.description || '无描述';
+            
+            // 设置状态标签
+            const statusElement = document.getElementById('linkStatus');
+            if (link.status === 'ACTIVE') {
+                statusElement.textContent = '活跃';
+                statusElement.className = 'badge bg-success';
+            } else if (link.status === 'DISABLED') {
+                statusElement.textContent = '已禁用';
+                statusElement.className = 'badge bg-secondary';
+            } else {
+                statusElement.textContent = '已过期';
+                statusElement.className = 'badge bg-danger';
+            }
+            
+            // 设置切换状态按钮文本
+            const toggleBtn = document.getElementById('toggleStatusBtn');
+            if (link.status === 'ACTIVE') {
+                toggleBtn.innerHTML = '<i class="bi bi-pause-circle"></i> 禁用';
+                toggleBtn.classList.remove('btn-outline-success');
+                toggleBtn.classList.add('btn-outline-secondary');
+            } else {
+                toggleBtn.innerHTML = '<i class="bi bi-play-circle"></i> 启用';
+                toggleBtn.classList.remove('btn-outline-secondary');
+                toggleBtn.classList.add('btn-outline-success');
+            }
+            
+            // 设置创建时间
+            document.getElementById('linkCreatedAt').textContent = formatDate(link.createdAt);
+            
+            // 设置金额信息
+            document.getElementById('linkAmountType').textContent = link.amount.type === 'FIXED' ? '固定金额' : '动态金额';
+            
+            if (link.amount.type === 'FIXED') {
+                if (link.amount.quantity && link.amount.quantity > 1) {
+                    document.getElementById('linkAmount').textContent = 
+                        `${formatAmount(link.amount.value, link.amount.currency)} × ${link.amount.quantity} = ${formatAmount(link.amount.totalValue || (link.amount.value * link.amount.quantity), link.amount.currency)}`;
+                } else {
+                    document.getElementById('linkAmount').textContent = formatAmount(link.amount.value, link.amount.currency);
+                }
+            } else {
+                document.getElementById('linkAmount').textContent = 
+                    `${formatAmount(link.amount.minValue, link.amount.currency)} - ${formatAmount(link.amount.maxValue, link.amount.currency)}`;
+            }
+            
+            // 设置有效期信息
+            document.getElementById('linkValidityType').textContent = link.validity.type === 'PERMANENT' ? '永久有效' : '指定期限';
+            
+            if (link.validity.type === 'FIXED' && link.validity.endTime) {
+                document.getElementById('linkEndTime').textContent = formatDate(link.validity.endTime);
+            } else {
+                document.getElementById('linkEndTime').textContent = '永久有效';
+            }
+            
+            // 设置商品图片(如果有)
+            if (link.imageUrl) {
+                const imgElement = document.createElement('img');
+                imgElement.src = link.imageUrl;
+                imgElement.alt = link.title;
+                imgElement.className = 'img-fluid rounded';
+                document.getElementById('productImage').appendChild(imgElement);
+            }
+            
+            // 统计数据
+            document.getElementById('linkVisits').textContent = link.stats.visits || 0;
+            document.getElementById('linkConversions').textContent = link.stats.conversions || 0;
+            document.getElementById('linkTotalAmount').textContent = formatAmount(link.stats.totalAmount || 0, link.amount.currency);
+            
+            // 获取交易记录
+            const transactions = getLinkTransactions(link.id);
+            
+            // 显示交易记录表格
+            const transactionsTable = document.getElementById('transactionsTable');
+            transactionsTable.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                transactionsTable.innerHTML = '<tr><td colspan="5" class="text-center">暂无交易记录</td></tr>';
+            } else {
+                transactions.forEach(transaction => {
+                    const statusBadge = transaction.status === 'completed' 
+                        ? '<span class="badge bg-success">成功</span>'
+                        : '<span class="badge bg-warning">处理中</span>';
+                    
+                    transactionsTable.innerHTML += `
+                        <tr>
+                            <td>${transaction.id}</td>
+                            <td>${formatAmount(transaction.amount, transaction.currency)}</td>
+                            <td>${transaction.paymentMethod}</td>
+                            <td>${formatDate(transaction.createdAt)}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            // 生成图表
+            if (transactions.length > 0) {
+                // 按日期分组交易
+                const dateGroups = {};
+                transactions.forEach(transaction => {
+                    const date = new Date(transaction.createdAt).toLocaleDateString();
+                    if (!dateGroups[date]) {
+                        dateGroups[date] = 0;
+                    }
+                    dateGroups[date] += parseFloat(transaction.amount);
+                });
+                
+                // 创建图表数据
+                const labels = Object.keys(dateGroups);
+                const data = Object.values(dateGroups);
+                
+                const ctx = document.getElementById('transactionsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '每日交易金额 (' + link.amount.currency + ')',
+                            data: data,
+                            backgroundColor: 'rgba(0, 102, 255, 0.2)',
+                            borderColor: 'rgba(0, 102, 255, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('transactionsChart').style.display = 'none';
+            }
+            
+            // 生成支付链接URL
+            const paymentUrl = `${window.location.origin}${window.location.pathname.replace('/merchant/link-details.html', '')}/customer/payment.html?id=${link.shortId}`;
+            document.getElementById('paymentLinkUrl').value = paymentUrl;
+            
+            // 生成二维码
+            const qrCodeImg = document.createElement('img');
+            qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(paymentUrl)}`;
+            qrCodeImg.alt = 'Payment QR Code';
+            document.getElementById('linkQrCode').appendChild(qrCodeImg);
+            
+            // 绑定测试链接按钮
+            document.getElementById('testLinkBtn').href = paymentUrl;
+            document.getElementById('testLinkBtn').target = '_blank';
+            
+            // 复制链接按钮
+            document.getElementById('copyLinkBtn').addEventListener('click', function() {
+                const linkInput = document.getElementById('paymentLinkUrl');
+                linkInput.select();
+                linkInput.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                this.innerHTML = '<i class="bi bi-check-lg"></i> 已复制';
+                setTimeout(() => {
+                    this.innerHTML = '<i class="bi bi-clipboard"></i> 复制链接';
+                }, 2000);
+            });
+            
+            // 绑定分享按钮
+            document.getElementById('shareBtn').addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: link.title,
+                        text: link.description || '通过此链接支付',
+                        url: paymentUrl
+                    }).catch(console.error);
+                } else {
+                    const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+                    shareModal.show();
+                }
+            });
+            
+            // 绑定分享链接
+            document.getElementById('shareWhatsapp').href = `whatsapp://send?text=${encodeURIComponent(link.title + '\n' + paymentUrl)}`;
+            document.getElementById('shareEmail').href = `mailto:?subject=${encodeURIComponent(link.title)}&body=${encodeURIComponent(paymentUrl)}`;
+            document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(paymentUrl)}`;
+            document.getElementById('shareTwitter').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(link.title)}&url=${encodeURIComponent(paymentUrl)}`;
+            
+            // 绑定切换状态按钮
+            document.getElementById('toggleStatusBtn').addEventListener('click', function() {
+                const newStatus = link.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE';
+                if (updateLinkStatus(link.id, newStatus)) {
+                    location.reload();
+                }
+            });
+            
+            // 绑定删除按钮
+            document.getElementById('deleteBtn').addEventListener('click', function() {
+                if (confirm('确定要删除此支付链接吗？此操作无法撤销。')) {
+                    if (deleteLink(link.id)) {
+                        alert('链接已成功删除');
+                        window.location.href = 'manage-links.html';
+                    }
+                }
+            });
+            
+            // 设置商品编号
+            document.getElementById('linkProductCode').textContent = link.productCode || '无';
+        });
+    </script>
+</body>
+</html> 

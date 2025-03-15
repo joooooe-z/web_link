@@ -1,0 +1,70 @@
+# 收银台页面元素分析
+
+## 页面标题与导航
+- 页面标题: "Unicoeye® | Colored Contact Lenses"
+- 导航路径: Information > Shipping > Payment
+- 当前步骤: "Express Checkout"
+
+## 支付选项区域
+- PayPal 快捷支付按钮
+- 分隔符: "OR"
+
+## 联系信息区域
+- 标题: "Contact"
+- 登录选项: "Already have an account? Log in"
+- 输入字段: Email (必填)
+- 复选框: "Receive exclusive offers and marketing updates"
+
+## 配送地址区域
+- 标题: "Shipping address"
+- 国家/地区选择器: 默认显示"United States"
+- 输入字段:
+  - First name (必填)
+  - Last name (必填)
+  - Address (必填)
+  - 附加地址按钮: "Add apartment, suite, etc."
+  - City (必填)
+  - State (下拉选择)
+  - ZIP code (必填)
+  - Phone (必填)
+- 复选框: "Text me with news and offers"
+- 按钮: "Continue to Shipping"
+
+## 订单摘要区域(右侧)
+- 商品信息:
+  - 商品图片
+  - 商品名称: "Jennie Brown Yearly Contact Lenses"
+  - 规格: "Brown / 0.00"
+  - 价格: "$12.99"
+
+- 促销信息:
+  - "Buy 6, get 3 FREE"
+  - "Code: B6G3" (已复制状态)
+  - 下拉菜单: "More >"
+  
+- 促销代码列表:
+  - "Buy 6, get 3 FREE, Code: B6G3" (可复制)
+  - "Buy 4, get 2 FREE, Code: B4G2" (可复制)
+  - "Buy 2, get 1 FREE, Code: B2G1" (可复制)
+
+- 订单金额:
+  - 小计: "$12.99"
+  - 运费: 显示信息图标
+  - 总计: "$12.99"
+  
+- 运费提示:
+  - "Please make sure to check your shipping issue."
+  - "Free shipping on orders over $35."
+
+- 促销图片:
+  - FDA认证彩色隐形眼镜促销广告
+  - 显示多种促销代码和折扣信息
+
+## 交互元素
+- 可点击按钮: 2个 (PayPal, Continue to Shipping)
+- 可填写字段: 7个 (Email, First name, Last name, Address, City, ZIP code, Phone)
+- 下拉选择: 2个 (Country/region, State)
+- 复选框: 2个 (营销信息接收, 短信通知)
+- 可复制促销代码: 3个
+
+这个收银台页面设计清晰，包含了标准的电子商务结账流程所需的所有关键元素，同时右侧提供了订单摘要和促销信息，方便用户了解订单详情和可用优惠。

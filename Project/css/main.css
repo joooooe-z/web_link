@@ -1,0 +1,97 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.logo {
+    max-width: 200px;
+}
+
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    padding: 15px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.btn {
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #0066FF;
+    border-color: #0066FF;
+}
+
+.btn-primary:hover {
+    background-color: #0052cc;
+    border-color: #0052cc;
+}
+
+.form-control {
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+    border-color: #0066FF;
+    box-shadow: 0 0 0 0.25rem rgba(0, 102, 255, 0.25);
+}
+
+.badge {
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* 一些自定义样式 */
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+.text-primary {
+    color: #0066FF;
+}
+
+.section-divider {
+    margin: 30px 0;
+    border-top: 1px solid #eee;
+}
+
+/* 支付相关样式 */
+.payment-option {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-option:hover {
+    border-color: #0066FF;
+    background-color: #f8f9ff;
+}
+
+.payment-option.selected {
+    border-color: #0066FF;
+    background-color: #f0f5ff;
+} 

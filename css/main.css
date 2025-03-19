@@ -1,1 +1,311 @@
- 
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 左侧导航栏 */
+.sidebar {
+    width: 200px;
+    background-color: #fff;
+    border-right: 1px solid #eaeaea;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.logo-img {
+    height: 24px;
+}
+
+.nav-menu {
+    padding: 16px 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    color: #666;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.nav-item i {
+    font-size: 18px;
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+}
+
+.nav-item:hover {
+    background-color: #f5f7fa;
+    color: #1890ff;
+}
+
+.nav-item.active {
+    background-color: #e6f7ff;
+    color: #1890ff;
+    border-right: 3px solid #1890ff;
+}
+
+/* 主内容区域 */
+.main-content {
+    flex: 1;
+    margin-left: 200px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 顶部栏 */
+.header {
+    height: 64px;
+    background-color: #fff;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.page-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.language-selector {
+    margin-right: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.language-selector i {
+    margin-left: 4px;
+    font-size: 12px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.user-info i {
+    margin-left: 4px;
+    font-size: 12px;
+}
+
+/* 筛选区域 */
+.filter-section {
+    background-color: #fff;
+    padding: 16px 24px;
+    margin: 16px;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.filter-row {
+    display: flex;
+    margin-bottom: 16px;
+}
+
+.filter-item {
+    margin-right: 24px;
+    flex: 1;
+}
+
+.filter-item label {
+    display: block;
+    margin-bottom: 8px;
+    color: #666;
+}
+
+.date-range {
+    display: flex;
+    align-items: center;
+}
+
+.date-input {
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    width: 180px;
+}
+
+.date-separator {
+    margin: 0 8px;
+    color: #999;
+}
+
+.status-select {
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.product-input {
+    padding: 8px 12px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+/* 按钮样式 */
+.primary-button {
+    background-color: #1890ff;
+    color: #fff;
+    border: none;
+}
+
+.secondary-button {
+    background-color: #fff;
+    color: #666;
+    border: 1px solid #d9d9d9;
+}
+
+.outline-button {
+    background-color: #fff;
+    color: #1890ff;
+    border: 1px solid #1890ff;
+}
+
+/* 卡片样式 */
+.card {
+    background-color: #fff;
+    margin: 0 16px 16px;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h2 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* 表格样式 */
+.table-container {
+    overflow-x: auto;
+}
+
+.pure-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pure-table th {
+    background-color: #fafafa;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 500;
+    color: #666;
+}
+
+.pure-table td {
+    padding: 12px 16px;
+}
+
+.link-id {
+    display: flex;
+    align-items: center;
+}
+
+.copy-icon {
+    margin-left: 8px;
+    color: #999;
+    cursor: pointer;
+}
+
+.copy-icon:hover {
+    color: #1890ff;
+}
+
+.status-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+
+.status-tag.active {
+    background-color: #f6ffed;
+    border: 1px solid #b7eb8f;
+    color: #52c41a;
+}
+
+.status-tag.inactive {
+    background-color: #fff2f0;
+    border: 1px solid #ffccc7;
+    color: #ff4d4f;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 80px;
+    }
+    
+    .nav-item span {
+        display: none;
+    }
+    
+    .nav-item i {
+        margin-right: 0;
+    }
+    
+    .main-content {
+        margin-left: 80px;
+    }
+} 

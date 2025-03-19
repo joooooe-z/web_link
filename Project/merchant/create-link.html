@@ -20,5 +20,157 @@
 <body>
     <h3>正在重定向到控制台页面...</h3>
     <p>如果您没有被自动重定向，<a href="dashboard.html">请点击这里</a>。</p>
+    <div class="product-info">
+        <h5>商品信息</h5>
+        <hr>
+        <div class="form-group">
+            <label for="selectProduct">选择商品</label>
+            <select id="selectProduct" class="form-control">
+                <option value="">选择已有商品</option>
+                <!-- 动态加载商品选项 -->
+            </select>
+        </div>
+        <button class="pure-button secondary-button" onclick="showAddProductModal()">新增商品</button>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="allowQuantityAdjustment"> 允许客户调整数量
+            </label>
+        </div>
+    </div>
+    <div class="billing-options">
+        <h5>账单选项</h5>
+        <hr>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="collectAddress"> 收集客户地址
+            </label>
+            <div id="addressOptions" style="display: none; margin-left: 20px;">
+                <label>
+                    <input type="radio" name="addressType" value="billing" checked> 仅账单地址
+                </label>
+                <label>
+                    <input type="radio" name="addressType" value="billingAndShipping"> 账单地址和配送地址
+                </label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="requirePhone"> 要求用户提供手机号
+            </label>
+        </div>
+        <div class="form-group">
+            <label>选择支付方式</label>
+            <div>
+                <label>
+                    <input type="checkbox" id="cardPayment" checked> 卡支付
+                </label>
+                <label>
+                    <input type="checkbox" id="googlePay"> Google Pay
+                </label>
+                <label>
+                    <input type="checkbox" id="applePay"> Apple Pay
+                </label>
+            </div>
+        </div>
+    </div>
+    <div id="addProductModal" class="pure-modal">
+        <div class="pure-modal-overlay" onclick="closeAddProductModal()"></div>
+        <div class="pure-modal-container">
+            <div class="pure-modal-header">
+                <h4>新增商品</h4>
+                <button class="pure-modal-close" onclick="closeAddProductModal()">×</button>
+            </div>
+            <div class="pure-modal-body">
+                <form id="addProductForm" class="pure-form pure-form-stacked">
+                    <div class="form-group">
+                        <label for="productName">商品名 *</label>
+                        <input type="text" id="productName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">价格 *</label>
+                        <input type="number" id="productPrice" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productCurrency">币种 *</label>
+                        <select id="productCurrency" class="form-control" required>
+                            <option value="USD">美元 (USD)</option>
+                            <option value="EUR">欧元 (EUR)</option>
+                            <option value="JPY">日元 (JPY)</option>
+                            <option value="CNY">人民币 (CNY)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productDescription">商品描述</label>
+                        <textarea id="productDescription" class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="productImage">图片</label>
+                        <input type="file" id="productImage" class="form-control" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="priceNote">价格说明</label>
+                        <textarea id="priceNote" class="form-control"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="pure-modal-footer">
+                <button type="button" class="pure-button secondary-button" onclick="closeAddProductModal()">取消</button>
+                <button type="button" class="pure-button primary-button" onclick="addProduct()">添加商品</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'block';
+            document.body.classList.add('modal-open');
+        }
+
+        function closeAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        function addProduct() {
+            // 获取表单数据并验证
+            const productName = document.getElementById('productName').value;
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            const productCurrency = document.getElementById('productCurrency').value;
+            
+            if (!productName || isNaN(productPrice)) {
+                alert('请填写完整的商品信息');
+                return;
+            }
+
+            // 模拟保存商品
+            const newProduct = {
+                name: productName,
+                price: productPrice,
+                currency: productCurrency,
+                description: document.getElementById('productDescription').value,
+                image: document.getElementById('productImage').files[0],
+                priceNote: document.getElementById('priceNote').value
+            };
+
+            // 关闭模态框
+            closeAddProductModal();
+
+            // 清空表单
+            document.getElementById('addProductForm').reset();
+
+            // 更新商品选择列表
+            const selectProduct = document.getElementById('selectProduct');
+            const option = document.createElement('option');
+            option.value = newProduct.name;
+            option.textContent = `${newProduct.name} - ${newProduct.price} ${newProduct.currency}`;
+            selectProduct.appendChild(option);
+
+            alert('商品已添加');
+        }
+
+        // 显示/隐藏地址选项
+        document.getElementById('collectAddress').addEventListener('change', function() {
+            document.getElementById('addressOptions').style.display = this.checked ? 'block' : 'none';
+        });
+    </script>
 </body>
 </html>

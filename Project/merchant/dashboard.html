@@ -126,6 +126,33 @@
                 </table>
             </div>
         </div>
+
+        <!-- 在"最近交易"之后添加"产品目录"部分 -->
+        <div class="card">
+            <div class="card-header">
+                <h3>产品目录</h3>
+                <button id="createProductBtn" class="pure-button primary-button">创建产品</button>
+            </div>
+            <div class="card-body">
+                <table class="pure-table pure-table-bordered">
+                    <thead>
+                        <tr>
+                            <th>图片</th>
+                            <th>商品名</th>
+                            <th>定价</th>
+                            <th>商品描述</th>
+                            <th>创建日期</th>
+                            <th>更新日期</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable">
+                        <tr>
+                            <td colspan="6" class="text-center">暂无产品数据</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- 在控制台页面添加创建链接模态框 -->
@@ -138,70 +165,38 @@
             </div>
             <div class="pure-modal-body">
                 <form id="createLinkForm" class="pure-form pure-form-stacked">
-                    <!-- 基础信息 -->
-                    <h5>基础信息</h5>
+                    <!-- 1. 商品信息 -->
+                    <h5>商品信息</h5>
                     <hr>
                     
                     <div class="form-group">
-                        <label for="title">商品名称 *</label>
-                        <input type="text" id="title" class="form-control" required maxlength="50">
-                        <small>最多50个字符</small>
+                        <label for="selectProduct">选择商品</label>
+                        <select id="selectProduct" class="form-control">
+                            <option value="">选择已有商品</option>
+                            <!-- 动态加载商品选项 -->
+                        </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="description">商品描述</label>
-                        <textarea id="description" class="form-control" rows="3" maxlength="200"></textarea>
-                        <small>最多200个字符，描述仅显示在商户管理界面，不会展示给客户。</small>
-                    </div>
+                    <button type="button" class="pure-button secondary-button" id="addNewProductBtn">
+                        <i class="icon-plus"></i> 新增商品
+                    </button>
                     
-                    <div class="form-group">
-                        <label for="image">商品图片</label>
-                        <input type="file" id="image" class="form-control" accept="image/png, image/jpeg">
-                        <small>支持JPG/PNG，最大2MB</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="productCode">商品编号 *</label>
-                        <input type="text" id="productCode" class="form-control" required maxlength="20">
-                        <small>输入唯一商品编号，不可重复</small>
-                    </div>
-                    
-                    <!-- 金额设置 -->
-                    <h5 style="margin-top: 20px;">金额设置 *</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <div class="pure-g">
-                            <div class="pure-u-1-2">
-                                <label class="pure-radio">
-                                    <input type="radio" name="amountType" value="FIXED" checked> 固定金额
-                                </label>
-                            </div>
-                            <div class="pure-u-1-2">
-                                <label class="pure-radio">
-                                    <input type="radio" name="amountType" value="DYNAMIC"> 客户自定义金额
-                                </label>
-                            </div>
+                    <div id="productDetails" style="margin-top: 15px; display: none;">
+                        <div class="form-group">
+                            <label for="title">商品名称 *</label>
+                            <input type="text" id="title" class="form-control" required maxlength="50">
                         </div>
-                    </div>
-                    
-                    <div id="fixedAmountFields">
+                        
                         <div class="pure-g">
-                            <div class="pure-u-1-3">
+                            <div class="pure-u-1-2">
                                 <div class="form-group">
-                                    <label for="amount">单价 *</label>
+                                    <label for="amount">价格 *</label>
                                     <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
                                 </div>
                             </div>
-                            <div class="pure-u-1-3">
+                            <div class="pure-u-1-2">
                                 <div class="form-group">
-                                    <label for="quantity">商品数量 *</label>
-                                    <input type="number" id="quantity" class="form-control" min="1" value="1" required>
-                                </div>
-                            </div>
-                            <div class="pure-u-1-3">
-                                <div class="form-group">
-                                    <label for="currency">货币 *</label>
+                                    <label for="currency">币种 *</label>
                                     <select id="currency" class="form-control" required>
                                         <option value="USD">美元 (USD)</option>
                                         <option value="EUR">欧元 (EUR)</option>
@@ -211,78 +206,143 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div id="dynamicAmountFields" style="display: none;">
-                        <div class="pure-g">
-                            <div class="pure-u-1-3">
-                                <div class="form-group">
-                                    <label for="minAmount">最小金额</label>
-                                    <input type="number" id="minAmount" class="form-control" step="0.01" min="0.01">
-                                </div>
-                            </div>
-                            <div class="pure-u-1-3">
-                                <div class="form-group">
-                                    <label for="maxAmount">最大金额</label>
-                                    <input type="number" id="maxAmount" class="form-control" step="0.01" min="0.01">
-                                </div>
-                            </div>
-                            <div class="pure-u-1-3">
-                                <div class="form-group">
-                                    <label for="dynamicCurrency">货币 *</label>
-                                    <select id="dynamicCurrency" class="form-control" required>
-                                        <option value="USD">美元 (USD)</option>
-                                        <option value="EUR">欧元 (EUR)</option>
-                                        <option value="JPY">日元 (JPY)</option>
-                                        <option value="CNY">人民币 (CNY)</option>
-                                    </select>
-                                </div>
-                            </div>
+                        
+                        <div class="form-group">
+                            <label for="description">商品描述</label>
+                            <textarea id="description" class="form-control" rows="3" maxlength="200"></textarea>
+                            <small>最多200个字符，描述仅显示在商户管理界面，不会展示给客户。</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="image">商品图片</label>
+                            <input type="file" id="image" class="form-control" accept="image/png, image/jpeg">
+                            <small>支持JPG/PNG，最大2MB</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="priceNote">价格说明</label>
+                            <textarea id="priceNote" class="form-control" rows="2"></textarea>
+                            <small>价格说明仅显示给商户，不会展示给客户</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="productCode">商品编号 *</label>
+                            <input type="text" id="productCode" class="form-control" required maxlength="20">
+                            <small>输入唯一商品编号，不可重复</small>
                         </div>
                     </div>
                     
-                    <!-- 高级设置 -->
-                    <h5 style="margin-top: 20px;">高级设置</h5>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="allowQuantityAdjustment"> 
+                            允许客户调整数量
+                        </label>
+                    </div>
+                    
+                    <!-- 2. 账单选项 -->
+                    <h5 style="margin-top: 20px;">账单选项</h5>
                     <hr>
                     
                     <div class="form-group">
-                        <label>有效期设置</label>
-                        <div class="pure-g">
-                            <div class="pure-u-1-2">
-                                <label class="pure-radio">
-                                    <input type="radio" name="validityType" value="PERMANENT" checked> 永久有效
-                                </label>
-                            </div>
-                            <div class="pure-u-1-2">
-                                <label class="pure-radio">
-                                    <input type="radio" name="validityType" value="FIXED"> 设置有效期
-                                </label>
-                            </div>
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="collectAddress"> 
+                            收集客户地址
+                        </label>
+                        
+                        <div id="addressTypeOptions" style="margin-left: 25px; margin-top: 10px; display: none;">
+                            <label class="pure-radio">
+                                <input type="radio" name="addressType" value="billing" checked> 
+                                仅账单地址
+                            </label>
+                            <br>
+                            <label class="pure-radio">
+                                <input type="radio" name="addressType" value="both"> 
+                                账单地址和配送地址
+                            </label>
                         </div>
                     </div>
                     
-                    <div id="validityFields" style="display: none;">
-                        <div class="pure-g">
-                            <div class="pure-u-1-2">
-                                <div class="form-group">
-                                    <label for="endDate">截止日期</label>
-                                    <input type="date" id="endDate" class="form-control">
-                                </div>
-                            </div>
-                            <div class="pure-u-1-2">
-                                <div class="form-group">
-                                    <label for="maxUsage">使用次数限制</label>
-                                    <input type="number" id="maxUsage" class="form-control" min="1" max="1000">
-                                    <small>留空表示不限制次数</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="requirePhone"> 
+                            要求用户提供手机号
+                        </label>
                     </div>
                     
                     <div class="form-group">
                         <label>支付方式</label>
-                        <div class="alert alert-info">
-                            默认支持所有可用的支付方式，包括信用卡支付、Apple Pay和本地支付方式。
+                        <div style="margin-top: 10px;">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="cardPayment" checked> 
+                                卡支付
+                            </label>
+                            <br>
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="googlePay"> 
+                                Google Pay
+                            </label>
+                            <br>
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="applePay"> 
+                                Apple Pay
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. 高级选项 -->
+                    <h5 style="margin-top: 20px;">高级选项</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <button type="button" class="pure-button secondary-button" id="addCustomFieldBtn">
+                            <i class="icon-plus"></i> 添加自定义字段
+                        </button>
+                        
+                        <div id="customFieldsContainer" style="margin-top: 10px;">
+                            <!-- 动态添加的自定义字段将在这里显示 -->
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="usePromoCode"> 
+                            使用促销码
+                        </label>
+                    </div>
+                    
+                    <!-- 4. 支付后查看 -->
+                    <h5 style="margin-top: 20px;">支付后查看</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <div>
+                            <label class="pure-radio">
+                                <input type="radio" name="postPaymentAction" value="showConfirmation" checked> 
+                                显示确认页面
+                            </label>
+                            
+                            <div id="confirmationMessageOptions" style="margin-left: 25px; margin-top: 10px;">
+                                <label class="pure-checkbox">
+                                    <input type="checkbox" id="useCustomMessage"> 
+                                    使用自定义消息
+                                </label>
+                                
+                                <div id="customMessageField" style="margin-top: 10px; display: none;">
+                                    <textarea id="customMessage" class="form-control" rows="3" placeholder="输入支付成功后显示的自定义消息"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <label class="pure-radio">
+                                <input type="radio" name="postPaymentAction" value="redirect"> 
+                                不显示确认页面，跳转到网站
+                            </label>
+                            
+                            <div id="redirectUrlField" style="margin-left: 25px; margin-top: 10px; display: none;">
+                                <label for="redirectUrl">跳转网址</label>
+                                <input type="url" id="redirectUrl" class="form-control" placeholder="https://example.com/thank-you">
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -500,342 +560,547 @@
         </div>
     </div>
 
+    <!-- 添加创建产品模态框 -->
+    <div id="createProductModal" class="pure-modal">
+        <div class="pure-modal-overlay" onclick="closeProductModal()"></div>
+        <div class="pure-modal-container">
+            <div class="pure-modal-header">
+                <h4>创建产品</h4>
+                <button class="pure-modal-close" onclick="closeProductModal()">×</button>
+            </div>
+            <div class="pure-modal-body">
+                <form id="createProductForm" class="pure-form pure-form-stacked">
+                    <!-- 基础信息 -->
+                    <h5>基础信息</h5>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label for="productName">商品名称 *</label>
+                        <input type="text" id="productName" class="form-control" required maxlength="50">
+                        <small>最多50个字符</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productDescription">商品描述</label>
+                        <textarea id="productDescription" class="form-control" rows="3" maxlength="200"></textarea>
+                        <small>最多200个字符，描述仅显示在商户管理界面</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="productImage">商品图片</label>
+                        <input type="file" id="productImage" class="form-control" accept="image/png, image/jpeg">
+                        <small>支持JPG/PNG，最大2MB</small>
+                    </div>
+                    
+                    <!-- 价格设置 -->
+                    <h5 style="margin-top: 20px;">价格设置 *</h5>
+                    <hr>
+                    
+                    <div class="pure-g">
+                        <div class="pure-u-1-2">
+                            <div class="form-group">
+                                <label for="productPrice">价格 *</label>
+                                <input type="number" id="productPrice" class="form-control" step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <div class="pure-u-1-2">
+                            <div class="form-group">
+                                <label for="productCurrency">货币 *</label>
+                                <select id="productCurrency" class="form-control" required>
+                                    <option value="USD">美元 (USD)</option>
+                                    <option value="EUR">欧元 (EUR)</option>
+                                    <option value="JPY">日元 (JPY)</option>
+                                    <option value="CNY">人民币 (CNY)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="pure-modal-footer">
+                <button type="button" class="pure-button secondary-button" onclick="closeProductModal()">取消</button>
+                <button type="button" class="pure-button primary-button" id="submitProductForm">创建产品</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
     <script src="../js/storage.js"></script>
     <script>
-        // 添加以下函数来处理模态框和下拉菜单
+        // 1. 确保这些函数在全局作用域内定义，并在DOM加载前
+        function toggleDropdown() {
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            if (dropdownMenu) {
+                dropdownMenu.classList.toggle('show');
+            }
+        }
+        
         function showModal() {
-            document.getElementById('createLinkModal').style.display = 'block';
-            document.body.classList.add('modal-open');
+            const modal = document.getElementById('createLinkModal');
+            if (modal) {
+                modal.style.display = 'block';
+                document.body.classList.add('modal-open');
+            }
         }
         
         function closeModal() {
-            document.getElementById('createLinkModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            const modal = document.getElementById('createLinkModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
         }
         
         function showManualModal() {
-            document.getElementById('manualPaymentModal').style.display = 'block';
-            document.body.classList.add('modal-open');
+            const modal = document.getElementById('manualPaymentModal');
+            if (modal) {
+                modal.style.display = 'block';
+                document.body.classList.add('modal-open');
+            }
         }
         
         function closeManualModal() {
-            document.getElementById('manualPaymentModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            const modal = document.getElementById('manualPaymentModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
         }
         
         function showDynamicModal() {
-            document.getElementById('dynamicPaymentModal').style.display = 'block';
-            document.body.classList.add('modal-open');
+            const modal = document.getElementById('dynamicPaymentModal');
+            if (modal) {
+                modal.style.display = 'block';
+                document.body.classList.add('modal-open');
+            }
         }
         
         function closeDynamicModal() {
-            document.getElementById('dynamicPaymentModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
-        }
-        
-        // 切换下拉菜单显示状态
-        function toggleDropdown() {
-            document.querySelector('.dropdown-menu').classList.toggle('show');
-        }
-        
-        // 点击其他区域关闭下拉菜单
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropdown-toggle') && !event.target.matches('.dropdown-arrow')) {
-                var dropdowns = document.getElementsByClassName('dropdown-menu');
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
+            const modal = document.getElementById('dynamicPaymentModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
             }
         }
         
+        function showProductModal() {
+            const modal = document.getElementById('createProductModal');
+            if (modal) {
+                modal.style.display = 'block';
+                document.body.classList.add('modal-open');
+            }
+        }
+        
+        function closeProductModal() {
+            const modal = document.getElementById('createProductModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
+        }
+        
+        // 安全设置文本内容的辅助函数
+        function safeSetTextContent(elementId, text) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            // 统计数据
-            const links = getAllLinks();
-            const activeLinks = links.filter(link => link.status === 'ACTIVE');
-            const transactions = getAllTransactions();
-            
-            let totalVisits = 0;
-            let totalConversions = 0;
-            
-            links.forEach(link => {
-                totalVisits += link.stats.visits || 0;
-                totalConversions += link.stats.conversions || 0;
-            });
-            
-            document.getElementById('totalLinks').textContent = activeLinks.length;
-            document.getElementById('totalVisits').textContent = totalVisits;
-            document.getElementById('totalConversions').textContent = totalConversions;
-            
-            // 最近链接
-            const recentLinksTable = document.getElementById('recentLinksTable');
-            recentLinksTable.innerHTML = '';
-            
-            if (links.length === 0) {
-                recentLinksTable.innerHTML = '<tr><td colspan="4" class="text-center">暂无数据</td></tr>';
-            } else {
-                const recentLinks = [...links].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
-                
-                recentLinks.forEach(link => {
-                    const amountText = link.amount.type === 'FIXED' 
-                        ? formatAmount(link.amount.totalValue || link.amount.value, link.amount.currency)
-                        : '动态金额';
-                    
-                    const statusBadge = link.status === 'ACTIVE' 
-                        ? '<span class="badge badge-success">活跃</span>'
-                        : link.status === 'DISABLED'
-                            ? '<span class="badge badge-secondary">已禁用</span>'
-                            : '<span class="badge badge-danger">已过期</span>';
-                    
-                    recentLinksTable.innerHTML += `
-                        <tr>
-                            <td>${link.productCode || '无'}</td>
-                            <td><a href="link-details.html?id=${link.id}">${link.title}</a></td>
-                            <td>${amountText}</td>
-                            <td>${formatDate(link.createdAt)}</td>
-                            <td>${statusBadge}</td>
-                        </tr>
-                    `;
+            // 2. 确保在DOM加载后绑定事件监听器
+            const createLinkBtn = document.getElementById('createLinkBtn');
+            if (createLinkBtn) {
+                createLinkBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleDropdown();
                 });
             }
             
-            // 最近交易
-            const recentTransactionsTable = document.getElementById('recentTransactionsTable');
-            recentTransactionsTable.innerHTML = '';
-            
-            if (transactions.length === 0) {
-                recentTransactionsTable.innerHTML = '<tr><td colspan="4" class="text-center">暂无数据</td></tr>';
-            } else {
-                const recentTransactions = [...transactions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
-                
-                recentTransactions.forEach(transaction => {
-                    recentTransactionsTable.innerHTML += `
-                        <tr>
-                            <td>${transaction.id.substring(0, 8)}...</td>
-                            <td>${transaction.productTitle || '未知商品'}</td>
-                            <td>${formatAmount(transaction.amount, transaction.currency)}</td>
-                            <td>${transaction.paymentMethod}</td>
-                            <td>${formatDate(transaction.createdAt)}</td>
-                        </tr>
-                    `;
+            const createPaymentLink = document.getElementById('createPaymentLink');
+            if (createPaymentLink) {
+                createPaymentLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dropdownMenu = document.querySelector('.dropdown-menu');
+                    if (dropdownMenu) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                    showModal();
                 });
             }
             
-            // 实时更新预览
-            document.getElementById('title').addEventListener('input', function() {
-                document.getElementById('previewTitle').textContent = this.value || '链接标题';
-            });
+            // 添加创建产品按钮事件监听
+            const createProductBtn = document.getElementById('createProductBtn');
+            if (createProductBtn) {
+                createProductBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProductModal();
+                });
+            }
             
-            document.getElementById('amount').addEventListener('input', function() {
-                const amount = parseFloat(this.value) || 0;
-                const currency = document.getElementById('currency').value;
-                const formattedAmount = new Intl.NumberFormat('zh-CN', { 
-                    style: 'currency', 
-                    currency: currency 
-                }).format(amount);
-                
-                document.getElementById('previewPrice').textContent = formattedAmount;
-                document.getElementById('previewTotal').textContent = formattedAmount;
-            });
-            
-            document.getElementById('currency').addEventListener('change', function() {
-                const amount = parseFloat(document.getElementById('amount').value) || 0;
-                const currency = this.value;
-                const formattedAmount = new Intl.NumberFormat('zh-CN', { 
-                    style: 'currency', 
-                    currency: currency 
-                }).format(amount);
-                
-                document.getElementById('previewPrice').textContent = formattedAmount;
-                document.getElementById('previewTotal').textContent = formattedAmount;
-            });
-            
-            // 金额类型切换
-            document.querySelectorAll('input[name="amountType"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.value === 'FIXED') {
-                        document.getElementById('fixedAmountFields').style.display = 'block';
-                        document.getElementById('dynamicAmountFields').style.display = 'none';
+            // 处理产品表单提交
+            const submitProductForm = document.getElementById('submitProductForm');
+            if (submitProductForm) {
+                submitProductForm.addEventListener('click', function() {
+                    const form = document.getElementById('createProductForm');
+                    
+                    // 验证表单
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+                    
+                    // 获取表单数据
+                    const productName = document.getElementById('productName').value;
+                    const productDescription = document.getElementById('productDescription').value;
+                    const productPrice = parseFloat(document.getElementById('productPrice').value);
+                    const productCurrency = document.getElementById('productCurrency').value;
+                    
+                    // 获取图片数据
+                    let imageData = null;
+                    const imageFile = document.getElementById('productImage').files[0];
+                    if (imageFile) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imageData = e.target.result;
+                            saveProductWithImage(productName, productDescription, productPrice, productCurrency, imageData);
+                        };
+                        reader.readAsDataURL(imageFile);
                     } else {
-                        document.getElementById('fixedAmountFields').style.display = 'none';
-                        document.getElementById('dynamicAmountFields').style.display = 'block';
+                        saveProductWithImage(productName, productDescription, productPrice, productCurrency, null);
+                    }
+                });
+            }
+            
+            // 加载产品列表
+            loadProducts();
+
+            // 添加自定义字段计数器
+            let customFieldCount = 0;
+
+            // 处理下拉菜单选择商品
+            document.getElementById('selectProduct').addEventListener('change', function() {
+                const selectedValue = this.value;
+                const productDetails = document.getElementById('productDetails');
+                
+                if (selectedValue) {
+                    // 如果选择了现有商品，加载商品详情并隐藏详情部分
+                    const products = JSON.parse(localStorage.getItem('products') || '[]');
+                    const selectedProduct = products.find(p => p.id === selectedValue);
+                    
+                    if (selectedProduct) {
+                        // 填充表单字段
+                        document.getElementById('title').value = selectedProduct.name;
+                        document.getElementById('amount').value = selectedProduct.price;
+                        document.getElementById('currency').value = selectedProduct.currency;
+                        document.getElementById('description').value = selectedProduct.description || '';
+                        // 无法设置图片文件输入值，但可以用隐藏字段存储图片URL
+                        
+                        // 显示商品详情区域为只读模式
+                        productDetails.style.display = 'block';
+                        // 可以选择禁用这些字段，因为它们应从现有商品填充
+                    } else {
+                        // 未找到商品
+                        productDetails.style.display = 'none';
+                    }
+                } else {
+                    // 如果未选择商品，清空并隐藏详情部分
+                    productDetails.style.display = 'none';
+                    document.getElementById('createLinkForm').reset();
+                }
+            });
+
+            // 处理"新增商品"按钮
+            document.getElementById('addNewProductBtn').addEventListener('click', function() {
+                // 清空选择的商品
+                document.getElementById('selectProduct').value = '';
+                // 显示商品详情区域
+                document.getElementById('productDetails').style.display = 'block';
+            });
+
+            // 处理收集地址复选框
+            document.getElementById('collectAddress').addEventListener('change', function() {
+                document.getElementById('addressTypeOptions').style.display = this.checked ? 'block' : 'none';
+            });
+
+            // 处理自定义消息复选框
+            document.getElementById('useCustomMessage').addEventListener('change', function() {
+                document.getElementById('customMessageField').style.display = this.checked ? 'block' : 'none';
+            });
+
+            // 处理支付后操作单选按钮
+            document.querySelectorAll('input[name="postPaymentAction"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'showConfirmation') {
+                        document.getElementById('confirmationMessageOptions').style.display = 'block';
+                        document.getElementById('redirectUrlField').style.display = 'none';
+                    } else if (this.value === 'redirect') {
+                        document.getElementById('confirmationMessageOptions').style.display = 'none';
+                        document.getElementById('redirectUrlField').style.display = 'block';
                     }
                 });
             });
-            
-            // 有效期类型切换
-            document.querySelectorAll('input[name="validityType"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.value === 'PERMANENT') {
-                        document.getElementById('validityFields').style.display = 'none';
-                    } else {
-                        document.getElementById('validityFields').style.display = 'block';
-                    }
-                });
-            });
-            
-            // 下拉菜单点击事件
-            document.getElementById('createLinkBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                toggleDropdown();
-            });
-            
-            // 支付链接选项点击事件
-            document.getElementById('createPaymentLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector('.dropdown-menu').classList.remove('show');
-                showModal();
-            });
-            
-            // 手动付款选项点击事件
-            document.getElementById('createManualPayment').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector('.dropdown-menu').classList.remove('show');
-                showManualModal();
-            });
-            
-            // 动态金额付款选项点击事件
-            document.getElementById('createDynamicPayment').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector('.dropdown-menu').classList.remove('show');
-                showDynamicModal();
-            });
-            
-            // 动态金额有效期类型切换
-            document.querySelectorAll('input[name="dynamic_validityType"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if (this.value === 'PERMANENT') {
-                        document.getElementById('dynamicValidityFields').style.display = 'none';
-                    } else {
-                        document.getElementById('dynamicValidityFields').style.display = 'block';
-                    }
-                });
-            });
-            
-            // 处理手动付款提交
-            document.getElementById('submitManualPayment').addEventListener('click', function() {
-                const form = document.getElementById('manualPaymentForm');
+
+            // 处理添加自定义字段按钮
+            document.getElementById('addCustomFieldBtn').addEventListener('click', function() {
+                const customFieldsContainer = document.getElementById('customFieldsContainer');
+                const fieldId = 'customField_' + customFieldCount++;
                 
+                const fieldHtml = `
+                    <div class="custom-field" id="${fieldId}_container" style="margin-bottom: 15px; padding: 10px; border: 1px dashed #ccc; border-radius: 4px;">
+                        <div class="form-group">
+                            <label for="${fieldId}_label">字段标签 *</label>
+                            <input type="text" id="${fieldId}_label" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="${fieldId}_placeholder">占位文本</label>
+                            <input type="text" id="${fieldId}_placeholder" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="${fieldId}_required"> 
+                                必填字段
+                            </label>
+                        </div>
+                        <button type="button" class="pure-button danger-button" onclick="removeCustomField('${fieldId}_container')">
+                            删除此字段
+                        </button>
+                    </div>
+                `;
+                
+                customFieldsContainer.insertAdjacentHTML('beforeend', fieldHtml);
+            });
+
+            // 定义移除自定义字段的函数
+            function removeCustomField(containerId) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.remove();
+                }
+            }
+
+            // 替换submitLinkForm的事件处理器代码
+            document.getElementById('submitLinkForm').addEventListener('click', function() {
                 // 验证表单
+                const form = document.getElementById('createLinkForm');
                 if (!form.checkValidity()) {
                     form.reportValidity();
                     return;
                 }
                 
-                // 在实际应用中，这里会处理信用卡付款
-                // 当前演示版本，我们只是记录一个交易
+                // 获取表单数据
+                const title = document.getElementById('title').value;
+                const description = document.getElementById('description').value;
+                const productCode = document.getElementById('productCode').value;
+                const amountType = document.querySelector('input[name="amountType"]:checked') ? 
+                                    document.querySelector('input[name="amountType"]:checked').value : 'FIXED';
                 
-                // 创建一个简单的链接对象用于记录交易
-                const productCode = document.getElementById('manual_productCode').value;
                 // 检查商品编号唯一性
                 const links = getAllLinks();
                 if (links.some(link => link.productCode === productCode)) {
                     alert('商品编号已存在，请使用唯一的商品编号');
                     return;
                 }
-                
-                const link = {
-                    title: document.getElementById('manual_title').value,
-                    description: "手动付款交易",
-                    productCode: productCode,
-                    amount: {
-                        type: 'FIXED',
-                        currency: document.getElementById('manual_currency').value,
-                        value: parseFloat(document.getElementById('manual_amount').value),
-                        quantity: 1
-                    },
-                    validity: {
-                        type: 'PERMANENT'
-                    },
-                    paymentMethods: ["credit_card"]
-                };
-                
-                link.amount.totalValue = link.amount.value;
-                
-                // 保存链接
-                const savedLink = saveLink(link);
-                
-                // 记录交易
-                const transaction = {
-                    linkId: savedLink.id,
-                    merchantId: 'demo_merchant',
-                    amount: link.amount.value,
-                    currency: link.amount.currency,
-                    paymentMethod: 'card',
-                    status: 'completed',
-                    customerInfo: {
-                        email: document.getElementById('customer_email').value,
-                        name: document.getElementById('customer_name').value,
-                        card: '****' + document.getElementById('card_number').value.slice(-4)
-                    }
-                };
-                
-                recordTransaction(transaction);
-                
-                closeManualModal();
-                
-                alert('手动付款已成功处理！');
-                location.reload();
-            });
-            
-            // 处理动态金额链接提交
-            document.getElementById('submitDynamicPayment').addEventListener('click', function() {
-                const form = document.getElementById('dynamicPaymentForm');
-                
-                // 验证表单
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-                
-                // 检查商品编号唯一性
-                const productCode = document.getElementById('dynamic_productCode').value;
-                const links = getAllLinks();
-                if (links.some(link => link.productCode === productCode)) {
-                    alert('商品编号已存在，请使用唯一的商品编号');
-                    return;
-                }
-                
-                const validityType = document.querySelector('input[name="dynamic_validityType"]:checked').value;
                 
                 // 构建链接对象
-                const link = {
-                    title: document.getElementById('dynamic_title').value,
-                    description: document.getElementById('dynamic_description').value,
+                let link = {
+                    title: title,
+                    description: description,
                     productCode: productCode,
-                    amount: {
-                        type: 'DYNAMIC',
-                        currency: document.getElementById('dynamic_currency').value,
-                        minValue: parseFloat(document.getElementById('dynamic_minAmount').value) || 0.01,
-                        maxValue: parseFloat(document.getElementById('dynamic_maxAmount').value) || 9999.99
-                    },
                     validity: {
-                        type: validityType
-                    },
-                    paymentMethods: ["credit_card", "apple_pay", "local_payments"]
+                        type: document.querySelector('input[name="validityType"]:checked') ? 
+                              document.querySelector('input[name="validityType"]:checked').value : 'PERMANENT'
+                    }
                 };
                 
-                if (validityType === 'FIXED') {
-                    link.validity.endTime = document.getElementById('dynamic_endDate').value;
-                    link.validity.maxUsage = parseInt(document.getElementById('dynamic_maxUsage').value) || null;
+                // 处理金额信息
+                if (amountType === 'FIXED') {
+                    const amount = parseFloat(document.getElementById('amount').value);
+                    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+                    const currency = document.getElementById('currency').value;
+                    
+                    link.amount = {
+                        type: 'FIXED',
+                        value: amount,
+                        quantity: quantity,
+                        currency: currency,
+                        totalValue: amount * quantity
+                    };
+                } else {
+                    const minAmount = parseFloat(document.getElementById('minAmount').value) || 0.01;
+                    const maxAmount = parseFloat(document.getElementById('maxAmount').value) || 9999.99;
+                    const currency = document.getElementById('dynamicCurrency') ? 
+                                     document.getElementById('dynamicCurrency').value : 
+                                     document.getElementById('currency').value;
+                    
+                    link.amount = {
+                        type: 'DYNAMIC',
+                        currency: currency,
+                        minValue: minAmount,
+                        maxValue: maxAmount
+                    };
                 }
                 
-                // 保存链接
-                const savedLink = saveLink(link);
+                // 处理有效期
+                if (link.validity.type === 'FIXED') {
+                    link.validity.endTime = document.getElementById('endDate') ? 
+                                           document.getElementById('endDate').value : 
+                                           new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+                    link.validity.maxUsage = document.getElementById('maxUsage') ? 
+                                            parseInt(document.getElementById('maxUsage').value) || null : null;
+                }
                 
-                // 生成支付链接URL
-                const paymentUrl = `${window.location.origin}${window.location.pathname.replace('/merchant/dashboard.html', '')}/customer/payment.html?id=${savedLink.shortId}`;
+                // 添加新增的表单字段
+                link.allowQuantityAdjustment = document.getElementById('allowQuantityAdjustment').checked;
+                link.collectAddress = document.getElementById('collectAddress').checked;
+                link.addressType = link.collectAddress ? 
+                                  document.querySelector('input[name="addressType"]:checked').value : null;
+                link.requirePhone = document.getElementById('requirePhone').checked;
                 
-                closeDynamicModal();
+                // 获取支付方式
+                link.paymentMethods = [];
+                if (document.getElementById('cardPayment').checked) link.paymentMethods.push('card');
+                if (document.getElementById('googlePay').checked) link.paymentMethods.push('google_pay');
+                if (document.getElementById('applePay').checked) link.paymentMethods.push('apple_pay');
                 
-                // 显示成功提示并跳转到管理链接页面
-                alert(`动态金额付款链接已创建成功！\n链接: ${paymentUrl}`);
-                window.location.href = 'manage-links.html';
+                // 获取自定义字段
+                link.customFields = [];
+                document.querySelectorAll('.custom-field').forEach(field => {
+                    const fieldId = field.id.replace('_container', '');
+                    const labelElem = document.getElementById(`${fieldId}_label`);
+                    const placeholderElem = document.getElementById(`${fieldId}_placeholder`);
+                    const requiredElem = document.getElementById(`${fieldId}_required`);
+                    
+                    if (labelElem) {
+                        link.customFields.push({
+                            label: labelElem.value,
+                            placeholder: placeholderElem ? placeholderElem.value : '',
+                            required: requiredElem ? requiredElem.checked : false
+                        });
+                    }
+                });
+                
+                // 获取支付后行为
+                const postPaymentActionElem = document.querySelector('input[name="postPaymentAction"]:checked');
+                link.postPaymentAction = postPaymentActionElem ? postPaymentActionElem.value : 'showConfirmation';
+                
+                if (link.postPaymentAction === 'showConfirmation' && 
+                    document.getElementById('useCustomMessage') && 
+                    document.getElementById('useCustomMessage').checked) {
+                    link.customMessage = document.getElementById('customMessage').value;
+                } else if (link.postPaymentAction === 'redirect' && document.getElementById('redirectUrl')) {
+                    link.redirectUrl = document.getElementById('redirectUrl').value;
+                }
+                
+                link.usePromoCode = document.getElementById('usePromoCode') ? 
+                                    document.getElementById('usePromoCode').checked : false;
+                
+                // 处理图片上传
+                const imageFile = document.getElementById('image') ? document.getElementById('image').files[0] : null;
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        link.imageUrl = e.target.result;
+                        saveAndCompleteProcess(link);
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    saveAndCompleteProcess(link);
+                }
+                
+                function saveAndCompleteProcess(linkObj) {
+                    try {
+                        // 保存链接
+                        console.log('正在保存链接:', linkObj);
+                        const savedLink = saveLink(linkObj);
+                        console.log('链接保存成功:', savedLink);
+                        
+                        // 生成支付链接URL
+                        const paymentUrl = `../customer/payment.html?id=${savedLink.shortId}`;
+                        
+                        // 关闭模态框
+                        closeModal();
+                        
+                        // 显示成功提示并跳转
+                        alert(`支付链接已创建成功！\n链接: ${paymentUrl}`);
+                        window.location.href = 'manage-links.html';
+                    } catch (error) {
+                        console.error('保存链接时出错:', error);
+                        alert('创建链接失败: ' + (error.message || '未知错误'));
+                    }
+                }
             });
         });
+        
+        // 3. 添加错误处理和调试辅助
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript错误:', e.message, 'at', e.filename, ':', e.lineno);
+        });
+
+        // 保存产品数据
+        function saveProductWithImage(name, description, price, currency, imageUrl) {
+            const product = {
+                id: 'prod_' + Date.now() + Math.random().toString(36).substring(2, 10),
+                name: name,
+                description: description,
+                price: price,
+                currency: currency,
+                imageUrl: imageUrl,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            // 保存到localStorage
+            let products = JSON.parse(localStorage.getItem('products') || '[]');
+            products.push(product);
+            localStorage.setItem('products', JSON.stringify(products));
+            
+            // 关闭模态框
+            closeProductModal();
+            
+            // 重新加载产品列表
+            loadProducts();
+            
+            // 重置表单
+            document.getElementById('createProductForm').reset();
+            
+            // 显示成功消息
+            alert('产品创建成功！');
+        }
+
+        // 加载产品列表
+        function loadProducts() {
+            const productsTable = document.getElementById('productsTable');
+            if (!productsTable) return; // 安全检查
+            
+            const products = JSON.parse(localStorage.getItem('products') || '[]');
+            
+            if (products.length === 0) {
+                productsTable.innerHTML = '<tr><td colspan="6" class="text-center">暂无产品数据</td></tr>';
+                return;
+            }
+            
+            productsTable.innerHTML = '';
+            
+            products.forEach(product => {
+                let imageCell = '<td class="text-center">无图片</td>';
+                if (product.imageUrl) {
+                    imageCell = `<td class="text-center"><img src="${product.imageUrl}" alt="${product.name}" style="max-width: 50px; max-height: 50px;"></td>`;
+                }
+                
+                productsTable.innerHTML += `
+                    <tr>
+                        ${imageCell}
+                        <td>${product.name}</td>
+                        <td>${formatAmount(product.price, product.currency)}</td>
+                        <td>${product.description || '无描述'}</td>
+                        <td>${formatDate(product.createdAt)}</td>
+                        <td>${formatDate(product.updatedAt)}</td>
+                    </tr>
+                `;
+            });
+        }
     </script>
 </body>
 </html>
+

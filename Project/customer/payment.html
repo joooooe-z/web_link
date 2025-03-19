@@ -7,142 +7,382 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
     <link rel="stylesheet" href="../css/lite-main.css">
     <style>
-        .payment-container {
-            max-width: 800px;
-            margin: 40px auto;
-        }
-        .payment-header {
-            padding: 20px;
+        body {
             background-color: #f8f9fa;
-            border-bottom: 1px solid #eee;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .payment-content {
+        .payment-wrapper {
             display: flex;
-            flex-wrap: wrap;
+            max-width: 1000px;
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
         }
-        .payment-info {
+        .order-details {
             flex: 1;
-            min-width: 300px;
-            padding: 20px;
-            background-color: #f8f9fa;
+            background-color: #fff;
+            padding: 30px;
+            border-right: 1px solid #eee;
         }
         .payment-form {
-            flex: 2;
-            min-width: 300px;
-            padding: 20px;
+            flex: 1.5;
+            background-color: #fff;
+            padding: 30px;
         }
-        .payment-amount {
-            font-size: 24px;
+        .product-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .product-image {
+            width: 60px;
+            height: 60px;
+            background-color: #f5f5f5;
+            border: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            border-radius: 4px;
+        }
+        .product-details {
+            flex: 1;
+        }
+        .product-price {
             font-weight: 600;
-            margin: 15px 0;
+            color: #333;
         }
-        .payment-actions {
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .quantity-value {
+            margin: 0 10px;
+        }
+        .order-table {
+            margin-top: 30px;
+            width: 100%;
+        }
+        .order-table th {
+            text-align: left;
+            color: #555;
+            font-weight: normal;
+        }
+        .order-table td {
+            text-align: right;
+            padding: 8px 0;
+        }
+        .order-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-weight: 600;
+        }
+        .form-section {
+            margin-bottom: 25px;
+        }
+        .form-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .apple-pay-btn {
+            display: block;
+            width: 100%;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #777;
+        }
+        .divider:before, .divider:after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        .divider span {
+            margin: 0 10px;
+            font-size: 14px;
+        }
+        .card-fields {
+            margin-top: 15px;
+        }
+        .card-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .card-icons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .card-icon {
+            width: 30px;
+            height: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        .dropdown-container {
+            position: relative;
+            width: 100%;
+        }
+        .dropdown-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23555' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: calc(100% - 12px) center;
+            padding-right: 30px;
+        }
+        .form-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .collapsible-section {
             margin-top: 20px;
+        }
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .collapsible-content {
+            margin-top: 15px;
+        }
+        .pay-button {
+            width: 100%;
+            background-color: #192b5e;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .terms-text {
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .return-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            text-decoration: none;
+        }
+        .return-link:hover {
+            text-decoration: underline;
+        }
+        .page-number {
+            text-align: right;
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card payment-container" id="paymentCard">
-            <div class="payment-content">
-                <!-- 左侧商品信息 -->
-                <div class="payment-info">
-                    <div class="text-center mb-20">
-                        <img src="../img/logo.png" alt="Merchant Logo" height="40">
+        <header style="padding: 15px 0; border-bottom: 1px solid #eee; margin-bottom: 30px;">
+            <h2 style="margin: 0;">客户链接支付</h2>
+        </header>
+        
+        <div class="payment-wrapper">
+            <!-- 左侧订单详情 -->
+            <div class="order-details">
+                <div class="product-item">
+                    <div class="product-image">
+                        <img src="" alt="" id="productImg" style="max-width: 100%; max-height: 100%;">
                     </div>
-                    <h3 id="productTitle">加载中...</h3>
-                    
-                    <div id="productImage" class="text-center mb-20">
-                        <!-- 商品图片将在这里显示 -->
+                    <div class="product-details">
+                        <div id="productTitle">商品名称</div>
+                        <div id="productPrice" class="product-price">价格</div>
+                    </div>
+                    <div class="quantity">× <span id="productQuantity">1</span></div>
+                </div>
+                
+                <table class="order-table">
+                    <tr>
+                        <th>流水号</th>
+                        <td id="orderNumber">加载中...</td>
+                    </tr>
+                    <tr>
+                        <th>商户名称</th>
+                        <td id="merchantName">加载中...</td>
+                    </tr>
+                    <tr class="order-total">
+                        <th>数量</th>
+                        <td>
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" id="decreaseBtn">-</button>
+                                <span class="quantity-value" id="quantity">1</span>
+                                <button class="quantity-btn" id="increaseBtn">+</button>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <div class="page-number">页面 1</div>
+            </div>
+            
+            <!-- 右侧支付表单 -->
+            <div class="payment-form">
+                <h3>Pay with card</h3>
+                
+                <div class="form-section">
+                    <label for="country">Country</label>
+                    <div class="dropdown-container">
+                        <select id="country" class="dropdown-field">
+                            <option value="US">United States (Auto-detected)</option>
+                            <option value="CN">China</option>
+                            <option value="JP">Japan</option>
+                            <option value="GB">United Kingdom</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="apple-pay-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle;">
+                        <path d="M12.378 1.602a.5.5 0 0 0-.297.572l.458 1.83a.5.5 0 0 0 .963-.24l-.458-1.83a.5.5 0 0 0-.666-.332zm-10.832.524a.5.5 0 0 0-.32.646l.456 1.83a.5.5 0 0 0 .967-.242l-.456-1.83a.5.5 0 0 0-.647-.326z"/>
+                        <path d="M4.5 13.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v10a.5.5 0 0 1-.5.5h-7z"/>
+                    </svg>
+                    Pay
+                </button>
+                
+                <div class="divider">
+                    <span>Or pay with card</span>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Card Information</h3>
+                    <input type="text" class="form-field" placeholder="1234 1234 1234 1234">
+                    <div class="card-icons">
+                        <span class="card-icon" style="background-image: url('https://cdn.visa.com/v2/assets/images/logos/visa/blue/logo.png');"></span>
+                        <span class="card-icon" style="background-image: url('https://www.mastercard.com/content/dam/public/brandcenter/en/logos-marks/mastercard-logo-mark/SVG/mastercard-logo-mark-svg.svg');"></span>
+                        <span class="card-icon" style="background-image: url('https://www.americanexpress.com/content/dam/amex/us/merchant/logo-disclosure/logo-images/AMEX_Logo_OneColor_Blue.svg');"></span>
                     </div>
                     
-                    <div id="fixedAmountSection">
-                        <div class="payment-amount-details">
-                            <div class="amount-row">
-                                <span>单价:</span>
-                                <span id="productUnitPrice">--</span>
-                            </div>
-                            <div class="amount-row">
-                                <span>数量:</span>
-                                <span id="productQuantity">--</span>
-                            </div>
-                            <div class="amount-row total">
-                                <span>总金额:</span>
-                                <span id="productAmount">--</span>
-                            </div>
+                    <div class="card-row">
+                        <div style="flex: 1;">
+                            <input type="text" class="form-field" placeholder="MM / YY">
                         </div>
-                    </div>
-                    
-                    <div id="dynamicAmountSection" class="d-none">
-                        <div class="payment-amount-details">
-                            <div class="amount-row">
-                                <span>输入付款金额:</span>
-                                <div class="dynamic-input-container" style="width: 150px; border: 1px solid #0066FF; border-radius: 4px; overflow: hidden;">
-                                    <select id="dynamicCurrency" style="width: 60px; padding: 8px; border: none; background-color: #f0f5ff; outline: none;">
-                                        <option value="USD">$</option>
-                                        <option value="EUR">€</option>
-                                        <option value="JPY">¥</option>
-                                        <option value="CNY">¥</option>
-                                    </select>
-                                    <input type="number" id="dynamicAmount" style="width: 90px; padding: 8px; border: none; outline: none;" min="0.01" step="0.01">
-                                </div>
-                            </div>
-                            <div id="dynamicAmountError" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;">
-                                请输入有效金额
-                            </div>
-                            <div class="amount-row total">
-                                <span>总金额:</span>
-                                <span id="dynamicTotalAmount">--</span>
-                            </div>
+                        <div style="flex: 1;">
+                            <input type="text" class="form-field" placeholder="CVC">
                         </div>
                     </div>
                 </div>
                 
-                <!-- 右侧支付表单 -->
-                <div class="payment-form">
-                    <h3>选择支付方式</h3>
-                    
-                    <div class="payment-methods">
-                        <div class="payment-method" data-method="card">
-                            <div class="payment-method-content">
-                                <div>
-                                    <div class="fw-bold">信用卡</div>
-                                    <small>使用Visa, Mastercard等支付</small>
-                                </div>
+                <div class="form-section">
+                    <h3>Cardholder name</h3>
+                    <input type="text" class="form-field" placeholder="">
+                </div>
+                
+                <div class="collapsible-section">
+                    <div class="collapsible-header" id="billingHeader">
+                        <span>Billing Address/Contact information</span>
+                        <span>▼</span>
+                    </div>
+                    <div class="collapsible-content" id="billingContent">
+                        <div class="form-section">
+                            <label for="billing-country">Country</label>
+                            <div class="dropdown-container">
+                                <select id="billing-country" class="dropdown-field">
+                                    <option value="US">United States</option>
+                                    <option value="CN">China</option>
+                                    <option value="JP">Japan</option>
+                                    <option value="GB">United Kingdom</option>
+                                </select>
                             </div>
                         </div>
                         
-                        <div class="payment-method" data-method="wechat">
-                            <div class="payment-method-content">
-                                <div>
-                                    <div class="fw-bold">微信支付</div>
-                                    <small>使用微信扫码支付</small>
-                                </div>
+                        <div class="form-section">
+                            <label for="state">State/Province/Region</label>
+                            <div class="dropdown-container">
+                                <select id="state" class="dropdown-field">
+                                    <option value="auto">United States (Auto-detected)</option>
+                                </select>
                             </div>
                         </div>
                         
-                        <div class="payment-method" data-method="alipay">
-                            <div class="payment-method-content">
-                                <div>
-                                    <div class="fw-bold">支付宝</div>
-                                    <small>使用支付宝扫码支付</small>
-                                </div>
-                            </div>
+                        <div class="form-section">
+                            <label for="address">Address</label>
+                            <input type="text" id="address" class="form-field">
                         </div>
-                    </div>
-                    
-                    <div class="payment-actions">
-                        <button id="payButton" class="pure-button primary-button">确认支付</button>
-                    </div>
-                    
-                    <div class="text-center mt-20">
-                        <small>安全支付由 Onerway 提供保障</small>
+                        
+                        <div class="form-section">
+                            <label for="city">Town/City</label>
+                            <input type="text" id="city" class="form-field">
+                        </div>
+                        
+                        <div class="form-section">
+                            <label for="phone">电话号码</label>
+                            <input type="text" id="phone" class="form-field">
+                        </div>
+                        
+                        <div class="form-section">
+                            <label for="zipcode">邮编</label>
+                            <input type="text" id="zipcode" class="form-field">
+                        </div>
+                        
+                        <div class="form-section">
+                            <label for="promotion">促销码</label>
+                            <input type="text" id="promotion" class="form-field">
+                        </div>
+                        
+                        <div class="form-section">
+                            <label for="custom">自定义添加字段</label>
+                            <input type="text" id="custom" class="form-field">
+                        </div>
                     </div>
                 </div>
+                
+                <button id="payButton" class="pay-button">Pay <span id="totalAmount">22.85 USD</span></button>
+                
+                <div class="terms-text">
+                    <input type="checkbox" id="terms" checked>
+                    <label for="terms">阅读并同意公司的《隐私条款保护政策》</label>
+                </div>
+                
+                <a href="#" class="return-link">← Return to Merchant Page</a>
             </div>
         </div>
     </div>
-
+    
     <script src="../js/storage.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -180,68 +420,179 @@
             
             // 显示图片(如果有)
             if (link.imageUrl) {
-                const imgElement = document.createElement('img');
-                imgElement.src = link.imageUrl;
-                imgElement.alt = link.title;
-                imgElement.className = 'img-fluid rounded';
-                imgElement.style.maxHeight = '200px';
-                document.getElementById('productImage').appendChild(imgElement);
+                document.getElementById('productImg').src = link.imageUrl;
+                document.getElementById('productImg').alt = link.title;
             }
             
-            // 显示金额
-            if (link.amount.type === 'FIXED') {
-                // 显示详细价格信息
-                document.getElementById('productUnitPrice').textContent = formatAmount(link.amount.value, link.amount.currency);
-                document.getElementById('productQuantity').textContent = link.amount.quantity || 1;
-                document.getElementById('productAmount').textContent = formatAmount(link.amount.totalValue || link.amount.value, link.amount.currency);
-                document.getElementById('dynamicAmountSection').classList.add('d-none');
-            } else {
-                // 即使是动态金额，也不让用户输入，使用最小金额作为默认值
-                document.getElementById('fixedAmountSection').classList.remove('d-none');
-                document.getElementById('dynamicAmountSection').classList.add('d-none');
-                
-                // 设置金额为动态金额的最小值
-                const minAmount = link.amount.minValue || 0.01;
-                document.getElementById('productAmount').textContent = formatAmount(minAmount, link.amount.currency);
-                
-                // 在支付处理时使用这个值
-                link.amount.value = minAmount;
+            // 生成随机订单号
+            document.getElementById('orderNumber').textContent = '11111111111111111';
+            document.getElementById('merchantName').textContent = '威凯先生杂货';
+            
+            // 设置金额和数量
+            let quantity = link.amount.quantity || 1;
+            let unitPrice = link.amount.value;
+            let total = unitPrice * quantity;
+            
+            document.getElementById('productPrice').textContent = formatAmount(unitPrice, link.amount.currency);
+            document.getElementById('productQuantity').textContent = quantity;
+            document.getElementById('quantity').textContent = quantity;
+            
+            // 确保显示正确的总金额
+            updateTotalAmount();
+            
+            function updateTotalAmount() {
+                // 确保金额格式一致，包括货币符号、小数位等
+                document.getElementById('totalAmount').textContent = formatAmount(total, link.amount.currency);
             }
             
-            // 绑定支付方式选择
-            document.querySelectorAll('.payment-method').forEach(method => {
-                method.addEventListener('click', function() {
-                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-                    this.classList.add('selected');
-                });
+            // 折叠/展开账单地址部分
+            document.getElementById('billingHeader').addEventListener('click', function() {
+                const content = document.getElementById('billingContent');
+                const header = this.querySelector('span:last-child');
+                
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    header.textContent = '▼';
+                } else {
+                    content.style.display = 'none';
+                    header.textContent = '▲';
+                }
             });
             
-            // 绑定支付按钮
+            // 处理数量增减
+            document.getElementById('decreaseBtn').addEventListener('click', function() {
+                if (quantity > 1) {
+                    quantity--;
+                    updateQuantityAndTotal();
+                }
+            });
+            
+            document.getElementById('increaseBtn').addEventListener('click', function() {
+                quantity++;
+                updateQuantityAndTotal();
+            });
+            
+            function updateQuantityAndTotal() {
+                document.getElementById('productQuantity').textContent = quantity;
+                document.getElementById('quantity').textContent = quantity;
+                total = unitPrice * quantity;
+                updateTotalAmount();
+            }
+            
+            // 根据链接配置显示/隐藏表单字段
+            const billingContent = document.getElementById('billingContent');
+            
+            // 清空原有内容
+            billingContent.innerHTML = '';
+            
+            // 检查链接是否配置了收集地址
+            if (link.collectAddress) {
+                // 添加国家选择
+                const countrySection = document.createElement('div');
+                countrySection.className = 'form-section';
+                countrySection.innerHTML = `
+                    <label for="billing-country">Country</label>
+                    <div class="dropdown-container">
+                        <select id="billing-country" class="dropdown-field">
+                            <option value="US">United States</option>
+                            <option value="CN">China</option>
+                            <option value="JP">Japan</option>
+                            <option value="GB">United Kingdom</option>
+                        </select>
+                    </div>
+                `;
+                billingContent.appendChild(countrySection);
+                
+                // 添加州/省选择
+                const stateSection = document.createElement('div');
+                stateSection.className = 'form-section';
+                stateSection.innerHTML = `
+                    <label for="state">State/Province/Region</label>
+                    <div class="dropdown-container">
+                        <select id="state" class="dropdown-field">
+                            <option value="auto">United States (Auto-detected)</option>
+                        </select>
+                    </div>
+                `;
+                billingContent.appendChild(stateSection);
+                
+                // 添加地址字段
+                const addressSection = document.createElement('div');
+                addressSection.className = 'form-section';
+                addressSection.innerHTML = `
+                    <label for="address">Address</label>
+                    <input type="text" id="address" class="form-field">
+                `;
+                billingContent.appendChild(addressSection);
+                
+                // 添加城市字段
+                const citySection = document.createElement('div');
+                citySection.className = 'form-section';
+                citySection.innerHTML = `
+                    <label for="city">Town/City</label>
+                    <input type="text" id="city" class="form-field">
+                `;
+                billingContent.appendChild(citySection);
+                
+                // 添加邮编字段
+                const zipSection = document.createElement('div');
+                zipSection.className = 'form-section';
+                zipSection.innerHTML = `
+                    <label for="zipcode">邮编</label>
+                    <input type="text" id="zipcode" class="form-field">
+                `;
+                billingContent.appendChild(zipSection);
+            }
+            
+            // 检查链接是否配置了收集电话号码
+            if (link.requirePhone) {
+                const phoneSection = document.createElement('div');
+                phoneSection.className = 'form-section';
+                phoneSection.innerHTML = `
+                    <label for="phone">电话号码</label>
+                    <input type="text" id="phone" class="form-field">
+                `;
+                billingContent.appendChild(phoneSection);
+            }
+            
+            // 检查链接是否配置了促销码
+            if (link.allowPromotion) {
+                const promoSection = document.createElement('div');
+                promoSection.className = 'form-section';
+                promoSection.innerHTML = `
+                    <label for="promotion">促销码</label>
+                    <input type="text" id="promotion" class="form-field">
+                `;
+                billingContent.appendChild(promoSection);
+            }
+            
+            // 检查链接是否配置了自定义字段
+            if (link.customFields && link.customFields.length > 0) {
+                link.customFields.forEach((field, index) => {
+                    const customSection = document.createElement('div');
+                    customSection.className = 'form-section';
+                    customSection.innerHTML = `
+                        <label for="custom${index}">${field.label || '自定义字段'}</label>
+                        <input type="text" id="custom${index}" class="form-field" placeholder="${field.placeholder || ''}">
+                    `;
+                    billingContent.appendChild(customSection);
+                });
+            }
+            
+            // 如果没有任何要收集的信息，隐藏整个账单部分
+            if (billingContent.children.length === 0) {
+                document.querySelector('.collapsible-section').style.display = 'none';
+            }
+            
+            // 支付按钮点击
             document.getElementById('payButton').addEventListener('click', function() {
-                // 获取选择的支付方式
-                const selectedMethod = document.querySelector('.payment-method.selected');
-                if (!selectedMethod) {
-                    alert('请选择支付方式');
-                    return;
-                }
-                
-                const paymentMethod = selectedMethod.getAttribute('data-method');
-                
-                // 获取支付金额
-                let amount;
-                if (link.amount.type === 'FIXED') {
-                    amount = link.amount.totalValue || link.amount.value;
-                } else {
-                    amount = link.amount.value; // 使用前面设置的最小值
-                }
-                
                 // 记录交易数据
                 const transaction = {
                     linkId: link.id,
                     merchantId: link.merchantId || 'demo_merchant',
-                    amount: amount,
+                    amount: total,
                     currency: link.amount.currency,
-                    paymentMethod: paymentMethod,
+                    paymentMethod: 'card',
                     status: 'completed',
                     customerInfo: {
                         email: 'customer@example.com',
@@ -251,7 +602,7 @@
                 
                 const savedTransaction = recordTransaction(transaction);
                 
-                // 直接跳转到成功页面
+                // 跳转到成功页面
                 window.location.href = `success.html?id=${savedTransaction.id}`;
             });
         });

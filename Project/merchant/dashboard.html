@@ -345,6 +345,31 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 在表单中添加或确认这些单选按钮存在 -->
+                    <div class="form-group">
+                        <label>金额类型</label>
+                        <div>
+                            <label class="pure-radio">
+                                <input type="radio" name="amountType" value="FIXED" checked> 固定金额
+                            </label>
+                            <label class="pure-radio">
+                                <input type="radio" name="amountType" value="DYNAMIC"> 动态金额
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>有效期</label>
+                        <div>
+                            <label class="pure-radio">
+                                <input type="radio" name="validityType" value="PERMANENT" checked> 永久有效
+                            </label>
+                            <label class="pure-radio">
+                                <input type="radio" name="validityType" value="FIXED"> 指定截止日期
+                            </label>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="pure-modal-footer">
@@ -638,8 +663,11 @@
         function showModal() {
             const modal = document.getElementById('createLinkModal');
             if (modal) {
+                console.log('显示创建链接模态框');
                 modal.style.display = 'block';
                 document.body.classList.add('modal-open');
+            } else {
+                console.error('createLinkModal元素不存在');
             }
         }
         
@@ -879,45 +907,95 @@
                 }
             }
 
-            // 替换submitLinkForm的事件处理器代码
+            // 修改完善的submitLinkForm处理函数
             document.getElementById('submitLinkForm').addEventListener('click', function() {
-                // 验证表单
-                const form = document.getElementById('createLinkForm');
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
+                try {
+                    console.log("提交按钮被点击");
+                    
+                    // 验证表单
+                    const form = document.getElementById('createLinkForm');
+                    if (!form) {
+                        console.error('找不到createLinkForm表单');
+                        alert('表单元素丢失，请刷新页面重试');
+                        return;
+                    }
+                    
+                    // 基本表单验证
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+                    
+                    // 获取并验证关键表单字段
+                    const title = safeGetValue('title');
+                    const productCode = safeGetValue('productCode');
+                    
+                    if (!title) {
+                        alert('请填写商品名称');
+                        return;
+                    }
+                    
+                    if (!productCode) {
+                        alert('请填写商品编号');
+                        return;
+                    }
+                    
+                    // 检查商品编号唯一性
+                    const links = getAllLinks();
+                    if (links.some(link => link.productCode === productCode)) {
+                        alert('商品编号已存在，请使用唯一的商品编号');
+                        return;
+                    }
+                    
+                    // 构建链接对象
+                    const link = createLinkObjectFromForm();
+                    
+                    // 处理图片上传
+                    const imageInput = document.getElementById('image');
+                    if (imageInput && imageInput.files && imageInput.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            link.imageUrl = e.target.result;
+                            finalizeLinkCreation(link);
+                        };
+                        reader.readAsDataURL(imageInput.files[0]);
+                    } else {
+                        finalizeLinkCreation(link);
+                    }
+                } catch (error) {
+                    console.error('创建链接时出错:', error);
+                    alert('创建链接时发生错误: ' + error.message);
                 }
+            });
+
+            // 从表单创建链接对象
+            function createLinkObjectFromForm() {
+                const title = safeGetValue('title');
+                const description = safeGetValue('description');
+                const productCode = safeGetValue('productCode');
                 
-                // 获取表单数据
-                const title = document.getElementById('title').value;
-                const description = document.getElementById('description').value;
-                const productCode = document.getElementById('productCode').value;
-                const amountType = document.querySelector('input[name="amountType"]:checked') ? 
-                                    document.querySelector('input[name="amountType"]:checked').value : 'FIXED';
+                // 获取金额类型（支持回退）
+                const amountTypeRadio = document.querySelector('input[name="amountType"]:checked');
+                const amountType = amountTypeRadio ? amountTypeRadio.value : 'FIXED';
                 
-                // 检查商品编号唯一性
-                const links = getAllLinks();
-                if (links.some(link => link.productCode === productCode)) {
-                    alert('商品编号已存在，请使用唯一的商品编号');
-                    return;
-                }
+                // 获取有效期类型（支持回退）
+                const validityTypeRadio = document.querySelector('input[name="validityType"]:checked');
+                const validityType = validityTypeRadio ? validityTypeRadio.value : 'PERMANENT';
                 
-                // 构建链接对象
-                let link = {
-                    title: title,
-                    description: description,
-                    productCode: productCode,
+                const link = {
+                    title,
+                    description,
+                    productCode,
                     validity: {
-                        type: document.querySelector('input[name="validityType"]:checked') ? 
-                              document.querySelector('input[name="validityType"]:checked').value : 'PERMANENT'
+                        type: validityType
                     }
                 };
                 
                 // 处理金额信息
                 if (amountType === 'FIXED') {
-                    const amount = parseFloat(document.getElementById('amount').value);
-                    const quantity = parseInt(document.getElementById('quantity').value) || 1;
-                    const currency = document.getElementById('currency').value;
+                    const amount = safeGetNumberValue('amount', 0.01);
+                    const quantity = parseInt(safeGetValue('quantity', '1')) || 1;
+                    const currency = safeGetValue('currency', 'USD');
                     
                     link.amount = {
                         type: 'FIXED',
@@ -927,11 +1005,9 @@
                         totalValue: amount * quantity
                     };
                 } else {
-                    const minAmount = parseFloat(document.getElementById('minAmount').value) || 0.01;
-                    const maxAmount = parseFloat(document.getElementById('maxAmount').value) || 9999.99;
-                    const currency = document.getElementById('dynamicCurrency') ? 
-                                     document.getElementById('dynamicCurrency').value : 
-                                     document.getElementById('currency').value;
+                    const minAmount = safeGetNumberValue('minAmount', 0.01);
+                    const maxAmount = safeGetNumberValue('maxAmount', 9999.99);
+                    const currency = safeGetValue('dynamicCurrency', safeGetValue('currency', 'USD'));
                     
                     link.amount = {
                         type: 'DYNAMIC',
@@ -942,94 +1018,85 @@
                 }
                 
                 // 处理有效期
-                if (link.validity.type === 'FIXED') {
-                    link.validity.endTime = document.getElementById('endDate') ? 
-                                           document.getElementById('endDate').value : 
-                                           new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
-                    link.validity.maxUsage = document.getElementById('maxUsage') ? 
-                                            parseInt(document.getElementById('maxUsage').value) || null : null;
+                if (validityType === 'FIXED') {
+                    link.validity.endTime = safeGetValue('endDate', 
+                        new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]);
+                    
+                    const maxUsage = safeGetValue('maxUsage', '');
+                    link.validity.maxUsage = maxUsage ? parseInt(maxUsage) : null;
                 }
                 
-                // 添加新增的表单字段
-                link.allowQuantityAdjustment = document.getElementById('allowQuantityAdjustment').checked;
-                link.collectAddress = document.getElementById('collectAddress').checked;
-                link.addressType = link.collectAddress ? 
-                                  document.querySelector('input[name="addressType"]:checked').value : null;
-                link.requirePhone = document.getElementById('requirePhone').checked;
+                // 添加其他选项
+                link.allowQuantityAdjustment = document.getElementById('allowQuantityAdjustment')?.checked || false;
+                link.collectAddress = document.getElementById('collectAddress')?.checked || false;
+                
+                if (link.collectAddress) {
+                    const addressTypeRadio = document.querySelector('input[name="addressType"]:checked');
+                    link.addressType = addressTypeRadio ? addressTypeRadio.value : 'billing';
+                }
+                
+                link.requirePhone = document.getElementById('requirePhone')?.checked || false;
                 
                 // 获取支付方式
                 link.paymentMethods = [];
-                if (document.getElementById('cardPayment').checked) link.paymentMethods.push('card');
-                if (document.getElementById('googlePay').checked) link.paymentMethods.push('google_pay');
-                if (document.getElementById('applePay').checked) link.paymentMethods.push('apple_pay');
+                if (document.getElementById('cardPayment')?.checked) link.paymentMethods.push('card');
+                if (document.getElementById('googlePay')?.checked) link.paymentMethods.push('google_pay');
+                if (document.getElementById('applePay')?.checked) link.paymentMethods.push('apple_pay');
                 
                 // 获取自定义字段
                 link.customFields = [];
                 document.querySelectorAll('.custom-field').forEach(field => {
                     const fieldId = field.id.replace('_container', '');
                     const labelElem = document.getElementById(`${fieldId}_label`);
-                    const placeholderElem = document.getElementById(`${fieldId}_placeholder`);
-                    const requiredElem = document.getElementById(`${fieldId}_required`);
                     
                     if (labelElem) {
                         link.customFields.push({
                             label: labelElem.value,
-                            placeholder: placeholderElem ? placeholderElem.value : '',
-                            required: requiredElem ? requiredElem.checked : false
+                            placeholder: document.getElementById(`${fieldId}_placeholder`)?.value || '',
+                            required: document.getElementById(`${fieldId}_required`)?.checked || false
                         });
                     }
                 });
                 
                 // 获取支付后行为
-                const postPaymentActionElem = document.querySelector('input[name="postPaymentAction"]:checked');
-                link.postPaymentAction = postPaymentActionElem ? postPaymentActionElem.value : 'showConfirmation';
+                const postPaymentActionRadio = document.querySelector('input[name="postPaymentAction"]:checked');
+                link.postPaymentAction = postPaymentActionRadio ? postPaymentActionRadio.value : 'showConfirmation';
                 
                 if (link.postPaymentAction === 'showConfirmation' && 
-                    document.getElementById('useCustomMessage') && 
-                    document.getElementById('useCustomMessage').checked) {
-                    link.customMessage = document.getElementById('customMessage').value;
-                } else if (link.postPaymentAction === 'redirect' && document.getElementById('redirectUrl')) {
-                    link.redirectUrl = document.getElementById('redirectUrl').value;
+                    document.getElementById('useCustomMessage')?.checked) {
+                    link.customMessage = safeGetValue('customMessage');
+                } else if (link.postPaymentAction === 'redirect') {
+                    link.redirectUrl = safeGetValue('redirectUrl');
                 }
                 
-                link.usePromoCode = document.getElementById('usePromoCode') ? 
-                                    document.getElementById('usePromoCode').checked : false;
+                link.usePromoCode = document.getElementById('usePromoCode')?.checked || false;
                 
-                // 处理图片上传
-                const imageFile = document.getElementById('image') ? document.getElementById('image').files[0] : null;
-                if (imageFile) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        link.imageUrl = e.target.result;
-                        saveAndCompleteProcess(link);
-                    };
-                    reader.readAsDataURL(imageFile);
-                } else {
-                    saveAndCompleteProcess(link);
+                return link;
+            }
+
+            // 完成链接创建流程
+            function finalizeLinkCreation(link) {
+                try {
+                    console.log('保存链接:', link);
+                    
+                    // 保存链接
+                    const savedLink = saveLink(link);
+                    console.log('链接保存成功:', savedLink);
+                    
+                    // 生成支付链接URL
+                    const paymentUrl = `../customer/payment.html?id=${savedLink.shortId}`;
+                    
+                    // 关闭模态框
+                    closeModal();
+                    
+                    // 显示成功消息并跳转
+                    alert(`支付链接已创建成功！\n链接: ${paymentUrl}`);
+                    window.location.href = 'manage-links.html';
+                } catch (error) {
+                    console.error('保存链接时发生错误:', error);
+                    alert('创建链接失败: ' + (error.message || '未知错误'));
                 }
-                
-                function saveAndCompleteProcess(linkObj) {
-                    try {
-                        // 保存链接
-                        console.log('正在保存链接:', linkObj);
-                        const savedLink = saveLink(linkObj);
-                        console.log('链接保存成功:', savedLink);
-                        
-                        // 生成支付链接URL
-                        const paymentUrl = `../customer/payment.html?id=${savedLink.shortId}`;
-                        
-                        // 关闭模态框
-                        closeModal();
-                        
-                        // 显示成功提示并跳转
-                        alert(`支付链接已创建成功！\n链接: ${paymentUrl}`);
-                        window.location.href = 'manage-links.html';
-                    } catch (error) {
-                        console.error('保存链接时出错:', error);
-                        alert('创建链接失败: ' + (error.message || '未知错误'));
-                    }
-                }
-            });
+            }
         });
         
         // 3. 添加错误处理和调试辅助
@@ -1099,6 +1166,17 @@
                     </tr>
                 `;
             });
+        }
+
+        // 获取表单字段的安全函数
+        function safeGetValue(elementId, defaultValue = '') {
+            const element = document.getElementById(elementId);
+            return element ? element.value : defaultValue;
+        }
+
+        function safeGetNumberValue(elementId, defaultValue = 0) {
+            const element = document.getElementById(elementId);
+            return element ? parseFloat(element.value) || defaultValue : defaultValue;
         }
     </script>
 </body>

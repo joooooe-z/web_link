@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建订阅链接 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="../css/lite-main.css">
+    <link rel="stylesheet" href="../css/new-nav.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧导航栏 - 与其他页面保持一致 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo-sm.png" alt="Onerway Logo" class="sidebar-logo">
+                <h3>商户中心</h3>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <i class="nav-icon">📊</i>
+                        <span>控制台</span>
+                    </a>
+                    <!-- 控制台子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item">
+                            <a href="manage-links.html" class="sidebar-subnav-link">管理链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- 订阅功能导航入口 - 标记为激活 -->
+                <li class="sidebar-nav-item active">
+                    <a href="subscription-links.html" class="sidebar-nav-link">
+                        <i class="nav-icon">🔄</i>
+                        <span>订阅管理</span>
+                    </a>
+                    <!-- 订阅管理子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item active">
+                            <a href="subscription-links.html" class="sidebar-subnav-link">订阅链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">⚙️</i>
+                        <span>设置</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="subscription-module">
+                <div class="module-header">
+                    <h2>创建订阅链接</h2>
+                    <a href="subscription-links.html" class="pure-button secondary-button">返回列表</a>
+                </div>
+                
+                <form id="create-subscription-form" class="pure-form pure-form-stacked">
+                    <!-- 商品信息 -->
+                    <fieldset>
+                        <legend>商品信息</legend>
+                        
+                        <div class="form-group">
+                            <label for="title">商品名称 *</label>
+                            <input type="text" id="title" class="form-control" required maxlength="50">
+                        </div>
+                        
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="amount">价格 *</label>
+                                    <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="currency">币种 *</label>
+                                    <select id="currency" class="form-control" required>
+                                        <option value="USD">美元 (USD)</option>
+                                        <option value="EUR">欧元 (EUR)</option>
+                                        <option value="JPY">日元 (JPY)</option>
+                                        <option value="CNY">人民币 (CNY)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">商品描述</label>
+                            <textarea id="description" class="form-control" rows="3" maxlength="200"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="image">商品图片</label>
+                            <input type="file" id="image" class="form-control" accept="image/*">
+                        </div>
+                    </fieldset>
+                    
+                    <!-- 订阅选项 -->
+                    <fieldset>
+                        <legend>订阅选项</legend>
+                        
+                        <div class="form-group">
+                            <label for="billingFrequency">订阅周期 *</label>
+                            <select id="billingFrequency" class="form-control" required>
+                                <option value="daily">1天</option>
+                                <option value="weekly">7天</option>
+                                <option value="monthly" selected>30天</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="totalBillingCycles">期数选择 *</label>
+                            <select id="totalBillingCycles" class="form-control" required>
+                                <option value="1">1期</option>
+                                <option value="3">3期</option>
+                                <option value="6">6期</option>
+                                <option value="12">12期</option>
+                                <option value="unlimited">永远</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="trialDays">试用天数</label>
+                            <input type="number" id="trialDays" class="form-control" min="0" value="0">
+                            <small>设置为0表示无试用期</small>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- 客户信息选项 -->
+                    <fieldset>
+                        <legend>客户信息选项</legend>
+                        
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="requirePhone"> 
+                                要求客户填写电话号码
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="collectAddress"> 
+                                收集地址信息
+                            </label>
+                        </div>
+                        
+                        <div id="addressTypeOptions" style="display: none; margin-left: 25px;">
+                            <label class="pure-radio">
+                                <input type="radio" name="addressType" value="billing" checked> 
+                                仅收集账单地址
+                            </label>
+                            <br>
+                            <label class="pure-radio">
+                                <input type="radio" name="addressType" value="billing_and_shipping"> 
+                                收集账单地址和配送地址
+                            </label>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- 支付方式 -->
+                    <fieldset>
+                        <legend>支付方式</legend>
+                        
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="cardPayment" checked> 
+                                信用卡支付
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="googlePay"> 
+                                Google Pay
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="applePay"> 
+                                Apple Pay
+                            </label>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="pure-button secondary-button" onclick="window.location.href='subscription-links.html'">取消</button>
+                        <button type="submit" class="pure-button primary-button">创建订阅链接</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/modules/subscription-core.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 地址收集选项显示控制
+            const collectAddressCheckbox = document.getElementById('collectAddress');
+            const addressTypeOptions = document.getElementById('addressTypeOptions');
+            
+            collectAddressCheckbox.addEventListener('change', function() {
+                addressTypeOptions.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // 表单提交处理
+            document.getElementById('create-subscription-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 收集表单数据
+                const formData = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    amount: parseFloat(document.getElementById('amount').value),
+                    currency: document.getElementById('currency').value,
+                    billingFrequency: document.getElementById('billingFrequency').value,
+                    totalBillingCycles: document.getElementById('totalBillingCycles').value,
+                    trialDays: parseInt(document.getElementById('trialDays').value) || 0,
+                    requirePhone: document.getElementById('requirePhone').checked,
+                    addressCollection: document.getElementById('collectAddress').checked
+                        ? document.querySelector('input[name="addressType"]:checked').value
+                        : 'none',
+                    paymentMethods: []
+                };
+                
+                // 收集支付方式
+                if (document.getElementById('cardPayment').checked) formData.paymentMethods.push('card');
+                if (document.getElementById('googlePay').checked) formData.paymentMethods.push('google_pay');
+                if (document.getElementById('applePay').checked) formData.paymentMethods.push('apple_pay');
+                
+                // 处理图片上传
+                const imageFile = document.getElementById('image').files[0];
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        formData.imageUrl = e.target.result;
+                        createSubscriptionLink(formData);
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    createSubscriptionLink(formData);
+                }
+            });
+            
+            // 创建订阅链接
+            function createSubscriptionLink(formData) {
+                try {
+                    const link = SubscriptionCore.createSubscriptionLink(formData);
+                    alert('订阅链接创建成功！');
+                    window.location.href = `subscription-details.html?id=${link.id}`;
+                } catch (error) {
+                    console.error('创建订阅链接失败:', error);
+                    alert('创建订阅链接失败: ' + error.message);
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

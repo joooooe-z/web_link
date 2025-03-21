@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅实例详情 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="../css/lite-main.css">
+    <link rel="stylesheet" href="../css/new-nav.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo-sm.png" alt="Onerway Logo" class="sidebar-logo">
+                <h3>商户中心</h3>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <i class="nav-icon">📊</i>
+                        <span>控制台</span>
+                    </a>
+                    <!-- 控制台子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item">
+                            <a href="manage-links.html" class="sidebar-subnav-link">管理链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- 订阅功能导航入口 - 标记为激活 -->
+                <li class="sidebar-nav-item active">
+                    <a href="subscription-links.html" class="sidebar-nav-link">
+                        <i class="nav-icon">🔄</i>
+                        <span>订阅管理</span>
+                    </a>
+                    <!-- 订阅管理子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item active">
+                            <a href="subscription-links.html" class="sidebar-subnav-link">订阅链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">⚙️</i>
+                        <span>设置</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div id="subscription-instance-container">
+                <!-- 面包屑导航 -->
+                <div class="breadcrumb-container">
+                    <ul class="breadcrumb">
+                        <li><a href="dashboard.html">控制台</a></li>
+                        <li><a href="subscription-links.html">订阅链接</a></li>
+                        <li><a href="#" id="back-to-link">链接详情</a></li>
+                        <li class="active">订阅实例</li>
+                    </ul>
+                </div>
+
+                <!-- 详情内容将在这里动态渲染 -->
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/modules/subscription-core.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取实例ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const instanceId = urlParams.get('id');
+            
+            if (!instanceId) {
+                showError('未指定订阅实例ID');
+                return;
+            }
+            
+            // 获取实例数据
+            const instance = SubscriptionCore.getSubscriptionInstance(instanceId);
+            if (!instance) {
+                showError('订阅实例不存在或已被删除');
+                return;
+            }
+            
+            // 获取关联的链接
+            const link = SubscriptionCore.getSubscriptionLink(instance.subscriptionLinkId);
+            if (!link) {
+                showError('无法找到关联的订阅链接');
+                return;
+            }
+            
+            // 更新面包屑中的返回链接
+            const backToLinkEl = document.getElementById('back-to-link');
+            if (backToLinkEl) {
+                backToLinkEl.href = `subscription-details.html?id=${link.id}`;
+                backToLinkEl.textContent = link.title;
+            }
+            
+            // 获取该实例的所有交易
+            const transactions = SubscriptionCore.getTransactionsByInstanceId(instanceId);
+            
+            // 渲染实例详情
+            renderInstanceDetails(instance, link, transactions);
+            
+            // 绑定事件处理
+            bindEvents(instance);
+        });
+        
+        // 显示错误信息
+        function showError(message) {
+            const container = document.getElementById('subscription-instance-container');
+            container.innerHTML = `
+                <div class="breadcrumb-container">
+                    <ul class="breadcrumb">
+                        <li><a href="dashboard.html">控制台</a></li>
+                        <li><a href="subscription-links.html">订阅链接</a></li>
+                        <li class="active">订阅实例</li>
+                    </ul>
+                </div>
+                <div class="error-message">
+                    <div class="error-icon">⚠️</div>
+                    <h3>${message}</h3>
+                    <a href="subscription-links.html" class="pure-button primary-button">返回列表</a>
+                </div>
+            `;
+        }
+        
+        // 渲染实例详情
+        function renderInstanceDetails(instance, link, transactions) {
+            const container = document.getElementById('subscription-instance-container');
+            
+            // 状态信息
+            let statusText, statusClass;
+            switch(instance.status) {
+                case 'active':
+                    statusText = '生效中';
+                    statusClass = 'badge-success';
+                    break;
+                case 'trialing':
+                    statusText = '试用中';
+                    statusClass = 'badge-info';
+                    break;
+                case 'pending_payment':
+                    statusText = '待扣款';
+                    statusClass = 'badge-warning';
+                    break;
+                case 'cancelled':
+                    statusText = '已取消';
+                    statusClass = 'badge-secondary';
+                    break;
+                case 'completed':
+                    statusText = '已完成';
+                    statusClass = 'badge-primary';
+                    break;
+                default:
+                    statusText = instance.status;
+                    statusClass = 'badge-secondary';
+            }
+            
+            // 周期文本
+            let frequencyText;
+            switch(instance.billingFrequency) {
+                case 'daily': frequencyText = '每天'; break;
+                case 'weekly': frequencyText = '每周'; break;
+                case 'monthly': frequencyText = '每月'; break;
+                default: frequencyText = instance.billingFrequency;
+            }
+            
+            container.innerHTML = `
+                <div class="breadcrumb-container">
+                    <ul class="breadcrumb">
+                        <li><a href="dashboard.html">控制台</a></li>
+                        <li><a href="subscription-links.html">订阅链接</a></li>
+                        <li><a href="subscription-details.html?id=${link.id}">${link.title}</a></li>
+                        <li class="active">订阅实例</li>
+                    </ul>
+                </div>
+                
+                <div class="subscription-module">
+                    <div class="module-header">
+                        <h2>订阅实例详情</h2>
+                        <a href="subscription-details.html?id=${link.id}" class="pure-button secondary-button">返回链接详情</a>
+                    </div>
+                    
+                    <div class="pure-g">
+                        <div class="pure-u-1-2">
+                            <div class="detail-section">
+                                <h3>基本信息</h3>
+                                <table class="pure-table pure-table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>订阅合同号</th>
+                                            <td>${instance.id}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>订阅产品</th>
+                                            <td>${link.title}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>客户邮箱</th>
+                                            <td>${instance.customerEmail}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>订阅状态</th>
+                                            <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>支付方式</th>
+                                            <td>${getPaymentMethodText(instance.paymentMethod)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>订阅周期</th>
+                                            <td>${frequencyText}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>起始日期</th>
+                                            <td>${formatDate(instance.startDate)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>结束日期</th>
+                                            <td>${instance.endDate ? formatDate(instance.endDate) : '无限期'}</td>
+                                        </tr>
+                                        ${instance.trialEndsAt ? `
+                                        <tr>
+                                            <th>试用结束日期</th>
+                                            <td>${formatDate(instance.trialEndsAt)}</td>
+                                        </tr>
+                                        ` : ''}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="pure-u-1-2">
+                            <div class="detail-section">
+                                <h3>订阅进度</h3>
+                                <table class="pure-table pure-table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>当前期数</th>
+                                            <td>${instance.currentCycle} / ${instance.billingCycles > 0 ? instance.billingCycles : '无限'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>下次扣款日期</th>
+                                            <td>${formatDate(instance.nextBillingDate)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>下次扣款金额</th>
+                                            <td>${formatAmount(instance.nextBillingAmount, instance.currency)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <div class="actions-container">
+                                    ${['active', 'trialing'].includes(instance.status) ? `
+                                    <button id="record-payment-btn" class="pure-button primary-button">
+                                        <i class="icon-money"></i> 记录扣款
+                                    </button>
+                                    <button id="cancel-subscription-btn" class="pure-button secondary-button">
+                                        <i class="icon-ban"></i> 取消订阅
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>交易记录</h3>
+                        <table class="pure-table pure-table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>交易ID</th>
+                                    <th>交易日期</th>
+                                    <th>金额</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${transactions.length === 0 
+                                    ? '<tr><td colspan="4" class="text-center">暂无交易记录</td></tr>'
+                                    : transactions.map(transaction => renderTransactionRow(transaction)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 渲染交易行
+        function renderTransactionRow(transaction) {
+            let statusText, statusClass;
+            
+            switch(transaction.status) {
+                case 'succeeded':
+                    statusText = '成功';
+                    statusClass = 'badge-success';
+                    break;
+                case 'failed':
+                    statusText = '失败';
+                    statusClass = 'badge-danger';
+                    break;
+                case 'pending':
+                    statusText = '处理中';
+                    statusClass = 'badge-warning';
+                    break;
+                default:
+                    statusText = transaction.status;
+                    statusClass = 'badge-secondary';
+            }
+            
+            return `
+                <tr>
+                    <td>${transaction.id}</td>
+                    <td>${formatDate(transaction.transactionDate)}</td>
+                    <td>${formatAmount(transaction.amount, transaction.currency)}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                </tr>
+            `;
+        }
+        
+        // 绑定事件
+        function bindEvents(instance) {
+            // 记录扣款按钮
+            const recordPaymentBtn = document.getElementById('record-payment-btn');
+            if (recordPaymentBtn) {
+                recordPaymentBtn.addEventListener('click', function() {
+                    if (confirm(`确定要记录一笔 ${formatAmount(instance.nextBillingAmount, instance.currency)} 的扣款吗？`)) {
+                        try {
+                            SubscriptionCore.recordSubscriptionTransaction(instance.id, instance.nextBillingAmount);
+                            alert('扣款记录已添加');
+                            window.location.reload();
+                        } catch (error) {
+                            console.error('记录扣款失败:', error);
+                            alert('记录扣款失败: ' + error.message);
+                        }
+                    }
+                });
+            }
+            
+            // 取消订阅按钮
+            const cancelBtn = document.getElementById('cancel-subscription-btn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    if (confirm('确定要取消此订阅吗？此操作无法撤销。')) {
+                        if (SubscriptionCore.cancelSubscription(instance.id)) {
+                            alert('订阅已成功取消');
+                            window.location.reload();
+                        } else {
+                            alert('取消订阅失败，请重试');
+                        }
+                    }
+                });
+            }
+        }
+        
+        // 获取支付方式文本
+        function getPaymentMethodText(method) {
+            switch(method) {
+                case 'card': return '信用卡支付';
+                case 'google_pay': return 'Google Pay';
+                case 'apple_pay': return 'Apple Pay';
+                default: return method;
+            }
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleString('zh-CN');
+        }
+        
+        // 格式化金额
+        function formatAmount(amount, currency) {
+            return new Intl.NumberFormat('zh-CN', { 
+                style: 'currency', 
+                currency: currency 
+            }).format(amount);
+        }
+    </script>
+</body>
+</html> 

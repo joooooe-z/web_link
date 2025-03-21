@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅链接管理 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="../css/lite-main.css">
+    <link rel="stylesheet" href="../css/new-nav.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧导航栏 - 与dashboard.html相同 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo-sm.png" alt="Onerway Logo" class="sidebar-logo">
+                <h3>商户中心</h3>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <i class="nav-icon">📊</i>
+                        <span>控制台</span>
+                    </a>
+                    <!-- 控制台子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item">
+                            <a href="manage-links.html" class="sidebar-subnav-link">管理链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- 订阅功能导航入口 -->
+                <li class="sidebar-nav-item active">
+                    <a href="subscription-links.html" class="sidebar-nav-link">
+                        <i class="nav-icon">🔄</i>
+                        <span>订阅管理</span>
+                    </a>
+                    <!-- 订阅管理子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item active">
+                            <a href="subscription-links.html" class="sidebar-subnav-link">订阅链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">⚙️</i>
+                        <span>设置</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div id="subscription-container">
+                <div class="subscription-module">
+                    <div class="module-header">
+                        <h2>订阅链接</h2>
+                        <a href="subscription-create.html" class="pure-button primary-button">创建订阅链接</a>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="pure-table pure-table-bordered" id="subscription-links-table">
+                                <thead>
+                                    <tr>
+                                        <th>商品名</th>
+                                        <th>金额</th>
+                                        <th>扣款频率</th>
+                                        <th>创建时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/modules/subscription-core.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载订阅链接数据
+            loadSubscriptionLinks();
+        });
+        
+        function loadSubscriptionLinks() {
+            const links = SubscriptionCore.getAllSubscriptionLinks();
+            
+            const tableBody = document.querySelector('#subscription-links-table tbody');
+            
+            if (links.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center">暂无订阅链接</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = '';
+            
+            links.forEach(link => {
+                let statusText = link.status === 'active' ? '启用' : '停用';
+                let statusClass = link.status === 'active' ? 'badge-success' : 'badge-secondary';
+                
+                // 格式化扣款周期
+                let frequencyText;
+                switch(link.billingFrequency) {
+                    case 'daily': frequencyText = '每天'; break;
+                    case 'weekly': frequencyText = '每周'; break;
+                    case 'monthly': frequencyText = '每月'; break;
+                    default: frequencyText = link.billingFrequency;
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${link.title}</td>
+                    <td>${formatAmount(link.amount, link.currency)}</td>
+                    <td>${frequencyText}</td>
+                    <td>${formatDate(link.createdAt)}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <a href="subscription-details.html?id=${link.id}" class="pure-button secondary-button">查看详情</a>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleString('zh-CN');
+        }
+        
+        // 格式化金额
+        function formatAmount(amount, currency) {
+            return new Intl.NumberFormat('zh-CN', { 
+                style: 'currency', 
+                currency: currency 
+            }).format(amount);
+        }
+    </script>
+</body>
+</html> 

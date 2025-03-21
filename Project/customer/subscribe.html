@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/customer.css">
+    <link rel="stylesheet" href="../css/subscription-customer.css">
+</head>
+<body>
+    <div class="container">
+        <div id="subscription-page" class="subscription-page">
+            <div class="loader-container">
+                <div class="loader"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/modules/subscription-core.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取链接ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            
+            if (!id) {
+                showError('链接不存在或已过期');
+                return;
+            }
+            
+            // 获取链接信息
+            const link = SubscriptionCore.getSubscriptionLinkByShortId(id);
+            
+            if (!link) {
+                showError('链接不存在或已过期');
+                return;
+            }
+            
+            // 记录访问
+            SubscriptionCore.recordSubscriptionLinkVisit(link.id);
+            
+            // 渲染订阅页面
+            renderSubscriptionPage(link);
+        });
+        
+        function showError(message) {
+            const container = document.getElementById('subscription-page');
+            container.innerHTML = `
+                <div class="error-box">
+                    <div class="error-icon">⚠️</div>
+                    <h2>出错了</h2>
+                    <p>${message}</p>
+                    <a href="#" class="pure-button" onclick="window.close(); return false;">关闭页面</a>
+                </div>
+            `;
+        }
+        
+        function renderSubscriptionPage(link) {
+            if (link.status !== 'active') {
+                showError('此订阅链接已禁用');
+                return;
+            }
+            
+            const container = document.getElementById('subscription-page');
+            
+            // 格式化金额
+            const formattedAmount = new Intl.NumberFormat('zh-CN', { 
+                style: 'currency', 
+                currency: link.currency 
+            }).format(link.amount);
+            
+            // 获取扣款周期文本
+            let frequencyText;
+            switch(link.billingFrequency) {
+                case 'daily': frequencyText = '每天'; break;
+                case 'weekly': frequencyText = '每周'; break;
+                case 'monthly': frequencyText = '每月'; break;
+                default: frequencyText = link.billingFrequency;
+            }
+            
+            // 期数文本
+            const cyclesText = link.totalBillingCycles === 'unlimited' ? '持续订阅' : `${link.totalBillingCycles}期`;
+            
+            container.innerHTML = `
+                <div class="subscription-header">
+                    <h1>订阅 ${link.title}</h1>
+                </div>
+                
+                <div class="subscription-product">
+                    ${link.imageUrl ? `<img src="${link.imageUrl}" alt="${link.title}" class="product-image">` : ''}
+                    <div class="product-info">
+                        <h2>${link.title}</h2>
+                        <p>${link.description || ''}</p>
+                        
+                        <div class="pricing-details">
+                            <div class="pricing-row">
+                                <span>订阅价格</span>
+                                <span>${formattedAmount}</span>
+                            </div>
+                            <div class="pricing-row">
+                                <span>扣款周期</span>
+                                <span>${frequencyText}</span>
+                            </div>
+                            <div class="pricing-row">
+                                <span>订阅期数</span>
+                                <span>${cyclesText}</span>
+                            </div>
+                            ${link.trialDays > 0 ? `
+                            <div class="pricing-row highlight">
+                                <span>免费试用</span>
+                                <span>${link.trialDays}天</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="subscription-form" class="pure-form pure-form-stacked">
+                    <fieldset>
+                        <legend>您的信息</legend>
+                        
+                        <div class="form-group">
+                            <label for="email">电子邮箱 *</label>
+                            <input type="email" id="email" class="pure-input-1" required>
+                        </div>
+                        
+                        ${link.requirePhone ? `
+                        <div class="form-group">
+                            <label for="phone">电话号码 *</label>
+                            <input type="tel" id="phone" class="pure-input-1" required>
+                        </div>
+                        ` : ''}
+                        
+                        ${link.addressCollection !== 'none' ? `
+                        <div class="form-group">
+                            <label for="address">账单地址 *</label>
+                            <textarea id="address" class="pure-input-1" rows="3" required></textarea>
+                        </div>
+                        ` : ''}
+                        
+                        ${link.addressCollection === 'billing_and_shipping' ? `
+                        <div class="form-group">
+                            <label class="pure-checkbox">
+                                <input type="checkbox" id="sameAsBilling" checked> 
+                                配送地址与账单地址相同
+                            </label>
+                        </div>
+                        
+                        <div id="shipping-address-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="shippingAddress">配送地址 *</label>
+                                <textarea id="shippingAddress" class="pure-input-1" rows="3"></textarea>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>付款方式</legend>
+                        
+                        <div class="payment-methods">
+                            <div class="payment-method">
+                                <input type="radio" name="paymentMethod" id="card-method" value="card" checked>
+                                <label for="card-method">
+                                    <span class="payment-icon">💳</span>
+                                    信用卡
+                                </label>
+                            </div>
+                            
+                            ${link.paymentMethods && link.paymentMethods.includes('google_pay') ? `
+                            <div class="payment-method">
+                                <input type="radio" name="paymentMethod" id="google-pay-method" value="google_pay">
+                                <label for="google-pay-method">
+                                    <span class="payment-icon">G</span>
+                                    Google Pay
+                                </label>
+                            </div>
+                            ` : ''}
+                            
+                            ${link.paymentMethods && link.paymentMethods.includes('apple_pay') ? `
+                            <div class="payment-method">
+                                <input type="radio" name="paymentMethod" id="apple-pay-method" value="apple_pay">
+                                <label for="apple-pay-method">
+                                    <span class="payment-icon">A</span>
+                                    Apple Pay
+                                </label>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div id="card-details" class="payment-details">
+                            <div class="form-group">
+                                <label for="cardNumber">卡号 *</label>
+                                <input type="text" id="cardNumber" class="pure-input-1" placeholder="1234 5678 9012 3456" required>
+                            </div>
+                            
+                            <div class="pure-g">
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="cardExpiry">有效期 *</label>
+                                        <input type="text" id="cardExpiry" class="pure-input-1" placeholder="MM/YY" required>
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="cardCvc">安全码 *</label>
+                                        <input type="text" id="cardCvc" class="pure-input-1" placeholder="CVC" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div class="terms-agreement">
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="terms-agreement" required> 
+                            我同意<a href="#" target="_blank">服务条款</a>和<a href="#" target="_blank">隐私政策</a>，并授权按照上述订阅计划定期付款。
+                        </label>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="pure-button primary-button" id="submit-subscription">
+                            完成订阅
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            // 绑定事件
+            if (link.addressCollection === 'billing_and_shipping') {
+                document.getElementById('sameAsBilling').addEventListener('change', function() {
+                    document.getElementById('shipping-address-fields').style.display = this.checked ? 'none' : 'block';
+                    document.getElementById('shippingAddress').required = !this.checked;
+                });
+            }
+            
+            // 支付方式切换
+            document.querySelectorAll('.payment-method').forEach(method => {
+                method.addEventListener('click', function() {
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    
+                    document.querySelectorAll('.payment-details').forEach(details => {
+                        details.style.display = 'none';
+                    });
+                    
+                    const methodType = radio.value;
+                    if (methodType === 'card') {
+                        document.getElementById('card-details').style.display = 'block';
+                    }
+                });
+            });
+            
+            // 表单提交
+            document.getElementById('subscription-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 收集表单数据
+                const formData = {
+                    email: document.getElementById('email').value,
+                    phone: link.requirePhone ? document.getElementById('phone').value : null,
+                    address: link.addressCollection !== 'none' ? document.getElementById('address').value : null,
+                    shippingAddress: link.addressCollection === 'billing_and_shipping' && !document.getElementById('sameAsBilling').checked 
+                        ? document.getElementById('shippingAddress').value 
+                        : null,
+                    paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+                    cardDetails: document.querySelector('input[name="paymentMethod"]:checked').value === 'card' ? {
+                        number: document.getElementById('cardNumber').value,
+                        expiry: document.getElementById('cardExpiry').value,
+                        cvc: document.getElementById('cardCvc').value
+                    } : null
+                };
+                
+                // 在实际应用中，这里会进行支付处理
+                // 本示例中，我们简单模拟成功的订阅流程
+                try {
+                    // 创建订阅实例
+                    const instance = SubscriptionCore.createSubscriptionInstance(link.id, {
+                        email: formData.email,
+                        customerId: null, // 在真实环境中，这会是一个实际的客户ID
+                        paymentMethod: formData.paymentMethod
+                    });
+                    
+                    // 如果有免费试用期，不会立即创建第一笔交易
+                    if (!instance.trialEndsAt) {
+                        // 记录首次付款
+                        SubscriptionCore.recordSubscriptionTransaction(
+                            instance.id,
+                            instance.nextBillingAmount,
+                            'succeeded'
+                        );
+                    }
+                    
+                    // 显示成功页面
+                    showSuccessPage(instance, link);
+                } catch (error) {
+                    console.error('订阅失败:', error);
+                    showError('订阅处理失败: ' + error.message);
+                }
+            });
+        }
+        
+        function showSuccessPage(instance, link) {
+            const container = document.getElementById('subscription-page');
+            
+            // 格式化金额
+            const formattedAmount = new Intl.NumberFormat('zh-CN', { 
+                style: 'currency', 
+                currency: link.currency 
+            }).format(link.amount);
+            
+            // 获取下次扣款日期
+            const nextBillingDate = new Date(instance.nextBillingDate).toLocaleDateString('zh-CN');
+            
+            container.innerHTML = `
+                <div class="success-page">
+                    <div class="success-icon">✓</div>
+                    <h1>订阅成功！</h1>
+                    <p>感谢您订阅 ${link.title}</p>
+                    
+                    <div class="subscription-details">
+                        <h3>订阅详情</h3>
+                        <p>订阅ID: ${instance.id}</p>
+                        <p>产品: ${link.title}</p>
+                        <p>金额: ${formattedAmount}</p>
+                        <p>扣款周期: ${instance.billingFrequency === 'daily' ? '每天' : instance.billingFrequency === 'weekly' ? '每周' : '每月'}</p>
+                        <p>下次扣款日期: ${nextBillingDate}</p>
+                        ${instance.trialEndsAt ? `<p>试用期结束日期: ${new Date(instance.trialEndsAt).toLocaleDateString('zh-CN')}</p>` : ''}
+                    </div>
+                    
+                    <p>订阅确认邮件已发送至您的邮箱 ${instance.customerEmail}</p>
+                    
+                    <button class="pure-button primary-button" onclick="window.close()">关闭窗口</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 

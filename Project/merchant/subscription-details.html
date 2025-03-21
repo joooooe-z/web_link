@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅链接详情 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="../css/lite-main.css">
+    <link rel="stylesheet" href="../css/new-nav.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo-sm.png" alt="Onerway Logo" class="sidebar-logo">
+                <h3>商户中心</h3>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <i class="nav-icon">📊</i>
+                        <span>控制台</span>
+                    </a>
+                    <!-- 控制台子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item">
+                            <a href="manage-links.html" class="sidebar-subnav-link">管理链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- 订阅功能导航入口 - 标记为激活 -->
+                <li class="sidebar-nav-item active">
+                    <a href="subscription-links.html" class="sidebar-nav-link">
+                        <i class="nav-icon">🔄</i>
+                        <span>订阅管理</span>
+                    </a>
+                    <!-- 订阅管理子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item active">
+                            <a href="subscription-links.html" class="sidebar-subnav-link">订阅链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">⚙️</i>
+                        <span>设置</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div id="subscription-details-container">
+                <!-- 面包屑导航 -->
+                <div class="breadcrumb-container">
+                    <ul class="breadcrumb">
+                        <li><a href="dashboard.html">控制台</a></li>
+                        <li><a href="subscription-links.html">订阅链接</a></li>
+                        <li class="active">链接详情</li>
+                    </ul>
+                </div>
+
+                <!-- 详情内容将在这里动态渲染 -->
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/modules/subscription-core.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取链接ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const linkId = urlParams.get('id');
+            
+            if (!linkId) {
+                showError('未指定链接ID');
+                return;
+            }
+            
+            // 获取链接数据
+            const link = SubscriptionCore.getSubscriptionLink(linkId);
+            if (!link) {
+                showError('链接不存在或已被删除');
+                return;
+            }
+            
+            // 获取该链接的所有订阅实例
+            const instances = SubscriptionCore.getSubscriptionInstancesByLinkId(linkId);
+            
+            // 渲染链接详情
+            renderLinkDetails(link, instances);
+            
+            // 绑定事件处理
+            bindEvents(link);
+        });
+        
+        // 显示错误信息
+        function showError(message) {
+            const container = document.getElementById('subscription-details-container');
+            container.innerHTML = `
+                <div class="breadcrumb-container">
+                    <ul class="breadcrumb">
+                        <li><a href="dashboard.html">控制台</a></li>
+                        <li><a href="subscription-links.html">订阅链接</a></li>
+                        <li class="active">链接详情</li>
+                    </ul>
+                </div>
+                <div class="error-message">
+                    <div class="error-icon">⚠️</div>
+                    <h3>${message}</h3>
+                    <a href="subscription-links.html" class="pure-button primary-button">返回列表</a>
+                </div>
+            `;
+        }
+        
+        // 渲染链接详情
+        function renderLinkDetails(link, instances) {
+            const container = document.getElementById('subscription-details-container');
+            
+            // 格式化状态
+            let statusText = link.status === 'active' ? '启用' : '停用';
+            let statusClass = link.status === 'active' ? 'badge-success' : 'badge-secondary';
+            
+            // 格式化扣款周期
+            let frequencyText;
+            switch(link.billingFrequency) {
+                case 'daily': frequencyText = '每天'; break;
+                case 'weekly': frequencyText = '每周'; break;
+                case 'monthly': frequencyText = '每月'; break;
+                default: frequencyText = link.billingFrequency;
+            }
+            
+            container.innerHTML = `
+                <div class="breadcrumb-container">
+                    <ul class="breadcrumb">
+                        <li><a href="dashboard.html">控制台</a></li>
+                        <li><a href="subscription-links.html">订阅链接</a></li>
+                        <li class="active">链接详情</li>
+                    </ul>
+                </div>
+                
+                <div class="subscription-module">
+                    <div class="module-header">
+                        <h2>${link.title}</h2>
+                        <a href="subscription-links.html" class="pure-button secondary-button">返回列表</a>
+                    </div>
+                    
+                    <div class="pure-g">
+                        <div class="pure-u-1-2">
+                            <div class="detail-section">
+                                <h3>基本信息</h3>
+                                <table class="pure-table pure-table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th>商品名</th>
+                                            <td>${link.title}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>金额</th>
+                                            <td>${formatAmount(link.amount, link.currency)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>状态</th>
+                                            <td>
+                                                <span class="badge ${statusClass}">${statusText}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>扣款频率</th>
+                                            <td>${frequencyText}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>扣款方式</th>
+                                            <td>${link.paymentMethod === 'automatic' ? '自动' : '商家扣款'}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>订阅周期</th>
+                                            <td>${frequencyText}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>期数</th>
+                                            <td>${link.totalBillingCycles === 'unlimited' ? '无限' : link.totalBillingCycles}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>试用天数</th>
+                                            <td>${link.trialDays || '无'}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="pure-u-1-2">
+                            <div class="detail-section">
+                                <h3>统计信息</h3>
+                                <div class="stats-container">
+                                    <div class="stat-item">
+                                        <div class="stat-value">${instances.length}</div>
+                                        <div class="stat-label">已订阅用户数</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">${link.stats.visits || 0}</div>
+                                        <div class="stat-label">访问次数</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">${formatAmount(link.stats.totalAmount || 0, link.currency)}</div>
+                                        <div class="stat-label">已收取金额</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="link-actions">
+                                    <h4>链接操作</h4>
+                                    <div class="link-url" id="subscription-link-url">
+                                        ${window.location.origin}${window.location.pathname.replace('/merchant/subscription-details.html', '')}/customer/subscribe.html?id=${link.shortId}
+                                    </div>
+                                    <div class="link-actions-buttons">
+                                        <button id="copy-link-btn" class="pure-button secondary-button">
+                                            <i class="icon-copy"></i> 复制链接
+                                        </button>
+                                        <button id="toggle-status-btn" class="pure-button ${link.status === 'active' ? 'secondary-button' : 'primary-button'}">
+                                            ${link.status === 'active' ? '停用链接' : '启用链接'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>订阅实例</h3>
+                        <table class="pure-table pure-table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>订阅合同号</th>
+                                    <th>开始日期</th>
+                                    <th>到期日期</th>
+                                    <th>用户邮箱</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${instances.length === 0 
+                                    ? '<tr><td colspan="6" class="text-center">暂无订阅记录</td></tr>'
+                                    : instances.map(instance => renderInstanceRow(instance)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 渲染订阅实例行
+        function renderInstanceRow(instance) {
+            let statusText, statusClass;
+            
+            switch(instance.status) {
+                case 'active':
+                    statusText = '生效中';
+                    statusClass = 'badge-success';
+                    break;
+                case 'trialing':
+                    statusText = '试用中';
+                    statusClass = 'badge-info';
+                    break;
+                case 'pending_payment':
+                    statusText = '待扣款';
+                    statusClass = 'badge-warning';
+                    break;
+                case 'cancelled':
+                    statusText = '已取消';
+                    statusClass = 'badge-secondary';
+                    break;
+                case 'completed':
+                    statusText = '已完成';
+                    statusClass = 'badge-primary';
+                    break;
+                default:
+                    statusText = instance.status;
+                    statusClass = 'badge-secondary';
+            }
+            
+            return `
+                <tr>
+                    <td>${instance.id}</td>
+                    <td>${formatDate(instance.startDate)}</td>
+                    <td>${formatDate(instance.endDate)}</td>
+                    <td>${instance.customerEmail}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <a href="subscription-instance.html?id=${instance.id}" class="pure-button secondary-button">查看详情</a>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // 绑定事件
+        function bindEvents(link) {
+            // 复制链接按钮
+            document.getElementById('copy-link-btn').addEventListener('click', function() {
+                const linkUrl = document.getElementById('subscription-link-url').textContent.trim();
+                navigator.clipboard.writeText(linkUrl).then(() => {
+                    alert('链接已复制到剪贴板');
+                }).catch(err => {
+                    console.error('无法复制链接:', err);
+                    alert('无法复制链接，请手动选择并复制');
+                });
+            });
+            
+            // 切换状态按钮
+            document.getElementById('toggle-status-btn').addEventListener('click', function() {
+                const newStatus = link.status === 'active' ? 'disabled' : 'active';
+                link.status = newStatus;
+                link.disabledAt = newStatus === 'disabled' ? new Date().toISOString() : null;
+                
+                if (SubscriptionCore.updateSubscriptionLink(link)) {
+                    alert(`链接已${newStatus === 'active' ? '启用' : '停用'}`);
+                    window.location.reload();
+                } else {
+                    alert('操作失败，请重试');
+                }
+            });
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleString('zh-CN');
+        }
+        
+        // 格式化金额
+        function formatAmount(amount, currency) {
+            return new Intl.NumberFormat('zh-CN', { 
+                style: 'currency', 
+                currency: currency 
+            }).format(amount);
+        }
+    </script>
+</body>
+</html> 

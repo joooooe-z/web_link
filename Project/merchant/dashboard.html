@@ -39,10 +39,7 @@
                     <!-- 订阅管理子菜单 -->
                     <ul class="sidebar-subnav" style="display: none;">
                         <li class="sidebar-subnav-item">
-                            <a href="#" class="sidebar-subnav-link">订阅链接</a>
-                        </li>
-                        <li class="sidebar-subnav-item">
-                            <a href="#" class="sidebar-subnav-link">订阅记录</a>
+                            <a href="subscription-links.html" class="sidebar-subnav-link">订阅链接</a>
                         </li>
                     </ul>
                 </li>
@@ -687,12 +684,18 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 在控制台页面添加订阅模块容器 -->
+            <div id="subscription-module-container" style="display: none;">
+                <!-- 订阅模块将在这里渲染 -->
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
     <script src="../js/storage.js"></script>
     <script src="../js/navigation.js"></script>
+    <script src="../js/modules/module-loader.js"></script>
     <script>
         // 1. 确保这些函数在全局作用域内定义，并在DOM加载前
         function toggleDropdown() {
@@ -1139,8 +1142,80 @@
                     alert('创建链接失败: ' + (error.message || '未知错误'));
                 }
             }
+
+            // 确保这段代码在document ready后执行
+            ModuleLoader.loadSubscriptionModule('subscription-module-container');
+            
+            // 立即绑定导航事件，不等待模块加载完成
+            bindNavigationEvents();
+            
+            // 监听模块加载完成事件，用于初始化其他功能
+            document.addEventListener('subscription-module-loaded', function() {
+                console.log('订阅模块加载完成');
+                addSubscriptionToDropdown();
+            });
         });
         
+        // 绑定导航事件的函数
+        function bindNavigationEvents() {
+            // 为订阅管理菜单项添加事件
+            const subscriptionNav = document.querySelector('.sidebar-nav-item:nth-child(2)');
+            if (subscriptionNav) {
+                // 为主菜单项添加点击事件
+                const subscriptionLink = subscriptionNav.querySelector('.sidebar-nav-link');
+                subscriptionLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // 显示订阅模块
+                    toggleSubscriptionModule(true);
+                    // 设置hash以触发相应视图
+                    window.location.hash = '#list';
+                });
+                
+                // 为子菜单添加点击事件
+                const subscriptionLinks = subscriptionNav.querySelectorAll('.sidebar-subnav-link');
+                subscriptionLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        toggleSubscriptionModule(true);
+                        window.location.hash = '#list';
+                        console.log('订阅子菜单点击: 显示订阅列表');
+                    });
+                });
+            }
+            
+            // 为控制台添加返回事件
+            const dashboardNav = document.querySelector('.sidebar-nav-item:first-child');
+            if (dashboardNav) {
+                const dashboardLink = dashboardNav.querySelector('.sidebar-nav-link');
+                dashboardLink.addEventListener('click', function(e) {
+                    if (e.target === dashboardLink || dashboardLink.contains(e.target)) {
+                        toggleSubscriptionModule(false);
+                    }
+                });
+            }
+        }
+
+        // 增强版的切换函数，添加日志
+        function toggleSubscriptionModule(showSubscription) {
+            const mainContent = document.querySelector('.container');
+            const subscriptionModule = document.getElementById('subscription-module-container');
+            
+            console.log('toggleSubscriptionModule 调用:', showSubscription ? '显示订阅模块' : '显示主控制台');
+            
+            if (showSubscription) {
+                mainContent.style.display = 'none';
+                subscriptionModule.style.display = 'block';
+                console.log('订阅模块容器现在应该可见');
+            } else {
+                mainContent.style.display = 'block';
+                subscriptionModule.style.display = 'none';
+                // 清除URL中的hash部分
+                if (window.location.hash) {
+                    history.pushState("", document.title, window.location.pathname);
+                }
+            }
+        }
+
         // 3. 添加错误处理和调试辅助
         window.addEventListener('error', function(e) {
             console.error('JavaScript错误:', e.message, 'at', e.filename, ':', e.lineno);
@@ -1219,6 +1294,27 @@
         function safeGetNumberValue(elementId, defaultValue = 0) {
             const element = document.getElementById(elementId);
             return element ? parseFloat(element.value) || defaultValue : defaultValue;
+        }
+
+        // 切换显示订阅模块或主控制台
+        function toggleSubscriptionModule(showSubscription) {
+            const mainContent = document.querySelector('.container');
+            const subscriptionModule = document.getElementById('subscription-module-container');
+            
+            console.log('toggleSubscriptionModule 调用:', showSubscription ? '显示订阅模块' : '显示主控制台');
+            
+            if (showSubscription) {
+                mainContent.style.display = 'none';
+                subscriptionModule.style.display = 'block';
+                console.log('订阅模块容器现在应该可见');
+            } else {
+                mainContent.style.display = 'block';
+                subscriptionModule.style.display = 'none';
+                // 清除URL中的hash部分
+                if (window.location.hash) {
+                    history.pushState("", document.title, window.location.pathname);
+                }
+            }
         }
     </script>
 </body>

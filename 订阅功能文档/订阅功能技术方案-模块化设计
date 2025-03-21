@@ -1,0 +1,2371 @@
+# Onerway 订阅功能技术方案 - 模块化设计
+
+## 1. 概述
+
+本文档详细描述了使用模块化设计方法实现 Onerway 订阅功能的技术方案。该方案旨在以最小的现有代码改动来添加订阅功能，同时确保现有支付链接功能不受影响。
+
+## 2. 架构设计
+
+### 2.1 总体架构
+
+采用模块化设计模式，将订阅功能实现为一系列独立但相互协作的模块。主要架构分为以下几层：
+
+- **核心层**：提供基础数据存储和业务逻辑
+- **UI层**：处理界面渲染和用户交互
+- **集成层**：负责与现有系统的交互和集成
+
+```
++-------------------+    +----------------------+
+|  现有支付链接系统  |    |     订阅功能模块      |
++-------------------+    +----------------------+
+         |                          |
+         +------------+-------------+
+                      |
+               +------+------+
+               |  集成接口层  |
+               +------+------+
+                      |
+          +-----------+-----------+
+          |                       |
+    +-----+------+         +-----+------+
+    |  页面集成   |         |  数据集成   |
+    +------------+         +------------+
+```
+
+### 2.2 模块组织
+
+订阅功能将被组织为以下主要模块：
+
+1. **订阅核心模块** (`subscription-core.js`)：管理订阅数据和业务逻辑
+2. **订阅UI模块** (`subscription-ui.js`)：处理订阅相关界面渲染
+3. **订阅事件模块** (`subscription-events.js`)：处理用户交互事件
+4. **模块加载器** (`module-loader.js`)：负责动态加载和初始化订阅模块
+5. **数据管理模块** (`subscription-storage.js`)：负责订阅数据的存储和检索
+
+## 3. 模块详细设计
+
+### 3.1 模块加载器 (module-loader.js)
+
+模块加载器作为整个系统的入口点，负责动态加载所需模块并协调它们的初始化。
+
+```javascript
+// module-loader.js
+const ModuleLoader = {
+  /**
+   * 加载订阅模块
+   * @param {String} containerId - UI容器的DOM ID
+   * @param {Object} options - 配置选项
+   */
+  loadSubscriptionModule(containerId, options = {}) {
+    // 加载核心模块
+    this.loadScript('/js/modules/subscription-core.js', () => {
+      // 加载UI模块
+      this.loadScript('/js/modules/subscription-ui.js', () => {
+        // 加载事件模块
+        this.loadScript('/js/modules/subscription-events.js', () => {
+          // 初始化订阅模块
+          if (window.SubscriptionCore && window.SubscriptionUI && window.SubscriptionEvents) {
+            SubscriptionCore.init();
+            SubscriptionUI.init(containerId);
+            SubscriptionEvents.init();
+            
+            // 触发模块加载完成事件
+            this.dispatchModuleLoadedEvent();
+          }
+        });
+      });
+    });
+  },
+  
+  /**
+   * 动态加载脚本
+   * @param {String} src - 脚本源路径
+   * @param {Function} callback - 加载完成回调
+   */
+  loadScript(src, callback) {
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = src;
+    script.onload = callback;
+    document.head.appendChild(script);
+  },
+  
+  /**
+   * 分发模块加载完成事件
+   */
+  dispatchModuleLoadedEvent() {
+    const event = new CustomEvent('subscription-module-loaded');
+    document.dispatchEvent(event);
+  }
+};
+```
+
+### 3.2 订阅核心模块 (subscription-core.js)
+
+订阅核心模块负责实现订阅功能的核心业务逻辑，包括订阅链接管理、订阅实例管理和订阅交易记录。
+
+```javascript
+// subscription-core.js
+const SubscriptionCore = {
+  // 命名空间
+  namespace: 'onerway.subscription',
+  
+  /**
+   * 初始化订阅核心模块
+   */
+  init() {
+    // 初始化存储
+    this.initStorage();
+    console.log('SubscriptionCore initialized');
+  },
+  
+  /**
+   * 初始化存储
+   */
+  initStorage() {
+    const subscriptionLinks = localStorage.getItem(`${this.namespace}.links`);
+    if (!subscriptionLinks) {
+      localStorage.setItem(`${this.namespace}.links`, JSON.stringify([]));
+    }
+    
+    const subscriptionInstances = localStorage.getItem(`${this.namespace}.instances`);
+    if (!subscriptionInstances) {
+      localStorage.setItem(`${this.namespace}.instances`, JSON.stringify([]));
+    }
+    
+    const subscriptionTransactions = localStorage.getItem(`${this.namespace}.transactions`);
+    if (!subscriptionTransactions) {
+      localStorage.setItem(`${this.namespace}.transactions`, JSON.stringify([]));
+    }
+  },
+  
+  /**
+   * 创建订阅链接
+   * @param {Object} linkData - 订阅链接数据
+   * @returns {Object} 创建的订阅链接
+   */
+  createSubscriptionLink(linkData) {
+    const links = this.getAllSubscriptionLinks();
+    
+    // 生成唯一ID
+    const linkId = `sub_link_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    
+    // 创建链接对象
+    const link = {
+      id: linkId,
+      shortId: this.generateShortId(),
+      merchantId: 'demo_merchant',
+      title: linkData.title,
+      description: linkData.description || '',
+      imageUrl: linkData.imageUrl || null,
+      amount: linkData.amount,
+      currency: linkData.currency,
+      billingFrequency: linkData.billingFrequency || 'monthly',
+      totalBillingCycles: linkData.totalBillingCycles || 'unlimited',
+      trialDays: linkData.trialDays || 0,
+      paymentMethod: linkData.paymentMethod || 'automatic',
+      addressCollection: linkData.addressCollection || 'none',
+      requirePhone: linkData.requirePhone || false,
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      disabledAt: null,
+      stats: {
+        visits: 0,
+        subscriptions: 0,
+        totalAmount: 0
+      }
+    };
+    
+    links.push(link);
+    this.saveSubscriptionLinks(links);
+    
+    return link;
+  },
+  
+  /**
+   * 创建订阅实例
+   * @param {String} linkId - 订阅链接ID
+   * @param {Object} customerData - 客户数据
+   * @returns {Object} 创建的订阅实例
+   */
+  createSubscriptionInstance(linkId, customerData) {
+    const link = this.getSubscriptionLink(linkId);
+    if (!link) {
+      throw new Error('Subscription link not found');
+    }
+    
+    const instances = this.getAllSubscriptionInstances();
+    
+    // 计算订阅周期
+    const startDate = new Date();
+    let endDate;
+    
+    if (link.totalBillingCycles === 'unlimited') {
+      // 无限订阅，设置很远的结束日期
+      endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + 10);
+    } else {
+      endDate = new Date(startDate);
+      switch (link.billingFrequency) {
+        case 'daily':
+          endDate.setDate(endDate.getDate() + parseInt(link.totalBillingCycles));
+          break;
+        case 'weekly':
+          endDate.setDate(endDate.getDate() + parseInt(link.totalBillingCycles) * 7);
+          break;
+        case 'monthly':
+          endDate.setMonth(endDate.getMonth() + parseInt(link.totalBillingCycles));
+          break;
+      }
+    }
+    
+    // 计算试用期结束日期
+    let trialEndsAt = null;
+    if (link.trialDays > 0) {
+      trialEndsAt = new Date(startDate);
+      trialEndsAt.setDate(trialEndsAt.getDate() + link.trialDays);
+    }
+    
+    // 计算下次扣款日期
+    const nextBillingDate = trialEndsAt || new Date(startDate);
+    switch (link.billingFrequency) {
+      case 'daily':
+        nextBillingDate.setDate(nextBillingDate.getDate() + 1);
+        break;
+      case 'weekly':
+        nextBillingDate.setDate(nextBillingDate.getDate() + 7);
+        break;
+      case 'monthly':
+        nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+        break;
+    }
+    
+    // 创建实例对象
+    const instance = {
+      id: `sub_inst_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      subscriptionLinkId: linkId,
+      customerId: customerData.customerId || `cus_${Math.random().toString(36).substring(2, 9)}`,
+      customerEmail: customerData.email,
+      status: trialEndsAt ? 'trialing' : 'active',
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      trialEndsAt: trialEndsAt ? trialEndsAt.toISOString() : null,
+      nextBillingDate: nextBillingDate.toISOString(),
+      nextBillingAmount: link.amount,
+      productName: link.title,
+      productQuantity: 1,
+      productUnitPrice: link.amount,
+      totalAmount: link.amount,
+      currency: link.currency,
+      billingCycles: link.totalBillingCycles === 'unlimited' ? null : parseInt(link.totalBillingCycles),
+      currentCycle: 0,
+      billingFrequency: link.billingFrequency,
+      paymentMethod: customerData.paymentMethod,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    instances.push(instance);
+    this.saveSubscriptionInstances(instances);
+    
+    // 更新订阅链接统计数据
+    link.stats.subscriptions += 1;
+    this.updateSubscriptionLink(link);
+    
+    return instance;
+  },
+  
+  /**
+   * 记录订阅交易
+   * @param {String} instanceId - 订阅实例ID
+   * @param {Number} amount - 交易金额
+   * @param {String} status - 交易状态
+   * @returns {Object} 创建的交易记录
+   */
+  recordSubscriptionTransaction(instanceId, amount, status = 'succeeded') {
+    const instance = this.getSubscriptionInstance(instanceId);
+    if (!instance) {
+      throw new Error('Subscription instance not found');
+    }
+    
+    const transactions = this.getAllSubscriptionTransactions();
+    
+    // 创建交易记录
+    const transaction = {
+      id: `sub_txn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      subscriptionInstanceId: instanceId,
+      subscriptionLinkId: instance.subscriptionLinkId,
+      amount: amount,
+      currency: instance.currency,
+      status: status,
+      paymentMethod: instance.paymentMethod,
+      transactionDate: new Date().toISOString(),
+      billingCycle: instance.currentCycle + 1
+    };
+    
+    transactions.push(transaction);
+    this.saveSubscriptionTransactions(transactions);
+    
+    // 更新实例信息
+    if (status === 'succeeded') {
+      instance.currentCycle += 1;
+      
+      // 计算下次扣款日期
+      const nextBillingDate = new Date(instance.nextBillingDate);
+      switch (instance.billingFrequency) {
+        case 'daily':
+          nextBillingDate.setDate(nextBillingDate.getDate() + 1);
+          break;
+        case 'weekly':
+          nextBillingDate.setDate(nextBillingDate.getDate() + 7);
+          break;
+        case 'monthly':
+          nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+          break;
+      }
+      
+      instance.nextBillingDate = nextBillingDate.toISOString();
+      instance.updatedAt = new Date().toISOString();
+      
+      // 检查是否完成所有周期
+      if (instance.billingCycles && instance.currentCycle >= instance.billingCycles) {
+        instance.status = 'completed';
+      }
+      
+      this.updateSubscriptionInstance(instance);
+      
+      // 更新订阅链接统计
+      const link = this.getSubscriptionLink(instance.subscriptionLinkId);
+      if (link) {
+        link.stats.totalAmount += amount;
+        this.updateSubscriptionLink(link);
+      }
+    }
+    
+    return transaction;
+  },
+  
+  // 工具方法
+  generateShortId() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  },
+  
+  // 数据访问方法
+  getAllSubscriptionLinks() {
+    const linksJson = localStorage.getItem(`${this.namespace}.links`);
+    return JSON.parse(linksJson || '[]');
+  },
+  
+  getSubscriptionLink(id) {
+    const links = this.getAllSubscriptionLinks();
+    return links.find(link => link.id === id);
+  },
+  
+  getSubscriptionLinkByShortId(shortId) {
+    const links = this.getAllSubscriptionLinks();
+    return links.find(link => link.shortId === shortId);
+  },
+  
+  saveSubscriptionLinks(links) {
+    localStorage.setItem(`${this.namespace}.links`, JSON.stringify(links));
+  },
+  
+  updateSubscriptionLink(link) {
+    const links = this.getAllSubscriptionLinks();
+    const index = links.findIndex(l => l.id === link.id);
+    if (index >= 0) {
+      links[index] = link;
+      this.saveSubscriptionLinks(links);
+      return true;
+    }
+    return false;
+  },
+  
+  getAllSubscriptionInstances() {
+    const instancesJson = localStorage.getItem(`${this.namespace}.instances`);
+    return JSON.parse(instancesJson || '[]');
+  },
+  
+  getSubscriptionInstance(id) {
+    const instances = this.getAllSubscriptionInstances();
+    return instances.find(instance => instance.id === id);
+  },
+  
+  getSubscriptionInstancesByLinkId(linkId) {
+    const instances = this.getAllSubscriptionInstances();
+    return instances.filter(instance => instance.subscriptionLinkId === linkId);
+  },
+  
+  saveSubscriptionInstances(instances) {
+    localStorage.setItem(`${this.namespace}.instances`, JSON.stringify(instances));
+  },
+  
+  updateSubscriptionInstance(instance) {
+    const instances = this.getAllSubscriptionInstances();
+    const index = instances.findIndex(i => i.id === instance.id);
+    if (index >= 0) {
+      instances[index] = instance;
+      this.saveSubscriptionInstances(instances);
+      return true;
+    }
+    return false;
+  },
+  
+  getAllSubscriptionTransactions() {
+    const transactionsJson = localStorage.getItem(`${this.namespace}.transactions`);
+    return JSON.parse(transactionsJson || '[]');
+  },
+  
+  getSubscriptionTransactionsByInstanceId(instanceId) {
+    const transactions = this.getAllSubscriptionTransactions();
+    return transactions.filter(txn => txn.subscriptionInstanceId === instanceId);
+  },
+  
+  saveSubscriptionTransactions(transactions) {
+    localStorage.setItem(`${this.namespace}.transactions`, JSON.stringify(transactions));
+  }
+};
+```
+
+### 3.3 订阅UI模块 (subscription-ui.js)
+
+订阅UI模块负责渲染订阅功能的用户界面，并处理简单的用户交互。
+
+```javascript
+// subscription-ui.js
+const SubscriptionUI = {
+  // 容器元素
+  container: null,
+  
+  /**
+   * 初始化UI模块
+   * @param {String} containerId - 容器元素ID
+   */
+  init(containerId) {
+    this.container = document.getElementById(containerId);
+    if (!this.container) {
+      console.error(`容器元素 ${containerId} 未找到`);
+      return;
+    }
+    
+    // 添加必要的样式
+    this.addStyles();
+    
+    // 初始化路由
+    this.initRouter();
+    
+    console.log('SubscriptionUI initialized');
+  },
+  
+  /**
+   * 添加订阅模块所需的样式
+   */
+  addStyles() {
+    if (document.getElementById('subscription-module-styles')) {
+      return;
+    }
+    
+    const styleElement = document.createElement('style');
+    styleElement.id = 'subscription-module-styles';
+    styleElement.textContent = `
+      .subscription-module {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      
+      .badge-success {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+      
+      .badge-info {
+        background-color: #17a2b8;
+        color: white;
+      }
+      
+      .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      
+      .badge-primary {
+        background-color: #007bff;
+        color: white;
+      }
+      
+      .detail-section {
+        margin-bottom: 20px;
+      }
+      
+      .stats-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      
+      .stat-item {
+        flex: 1;
+        text-align: center;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        margin: 0 5px;
+      }
+      
+      .stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      
+      .stat-label {
+        color: #6c757d;
+        font-size: 14px;
+      }
+      
+      .link-actions {
+        margin-top: 20px;
+      }
+      
+      .link-url {
+        margin-top: 10px;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+        word-break: break-all;
+      }
+      
+      .instance-details {
+        margin-top: 20px;
+      }
+      
+      .subscription-status {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+      }
+      
+      .status-active {
+        background-color: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.2);
+      }
+      
+      .status-trialing {
+        background-color: rgba(23, 162, 184, 0.1);
+        border: 1px solid rgba(23, 162, 184, 0.2);
+      }
+      
+      .status-pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.2);
+      }
+      
+      .form-actions {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+      }
+      
+      .error-message {
+        padding: 20px;
+        background-color: #f8d7da;
+        color: #721c24;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+    `;
+    
+    document.head.appendChild(styleElement);
+  },
+  
+  /**
+   * 初始化路由功能
+   */
+  initRouter() {
+    // 处理 URL hash 变化
+    window.addEventListener('hashchange', this.handleRouteChange.bind(this));
+    
+    // 触发初始路由
+    this.handleRouteChange();
+  },
+  
+  /**
+   * 处理路由变化
+   */
+  handleRouteChange() {
+    const hash = window.location.hash.substring(1) || 'list';
+    const [route, param] = hash.split('/');
+    
+    switch (route) {
+      case 'list':
+        this.renderLinksList();
+        break;
+      case 'create':
+        this.renderCreateForm();
+        break;
+      case 'details':
+        this.renderLinkDetails(param);
+        break;
+      case 'instance':
+        this.renderInstanceDetails(param);
+        break;
+      default:
+        this.renderLinksList();
+    }
+  },
+  
+  /**
+   * 渲染订阅链接列表
+   */
+  renderLinksList() {
+    const links = SubscriptionCore.getAllSubscriptionLinks();
+    
+    this.container.innerHTML = `
+      <div class="subscription-module">
+        <div class="module-header">
+          <h2>订阅链接管理</h2>
+          <button id="create-subscription-btn" class="pure-button primary-button">
+            创建订阅链接
+          </button>
+        </div>
+        
+        <table class="pure-table pure-table-bordered">
+          <thead>
+            <tr>
+              <th>链接</th>
+              <th>商品名</th>
+              <th>金额</th>
+              <th>扣款频率</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${links.length === 0 
+              ? '<tr><td colspan="6" class="text-center">暂无订阅链接</td></tr>'
+              : links.map(link => this.renderLinkRow(link)).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    
+    // 绑定事件
+    document.getElementById('create-subscription-btn').addEventListener('click', () => {
+      window.location.hash = '#create';
+    });
+  },
+  
+  /**
+   * 渲染单个订阅链接行
+   * @param {Object} link - 订阅链接对象
+   * @returns {String} HTML字符串
+   */
+  renderLinkRow(link) {
+    return `
+      <tr>
+        <td>${link.shortId}</td>
+        <td>${link.title}</td>
+        <td>${this.formatAmount(link.amount, link.currency)}</td>
+        <td>${this.getBillingFrequencyText(link.billingFrequency)}</td>
+        <td>${this.formatDate(link.createdAt)}</td>
+        <td>
+          <a href="#details/${link.id}" class="pure-button secondary-button">查看详情</a>
+        </td>
+      </tr>
+    `;
+  },
+  
+  /**
+   * 渲染创建订阅链接表单
+   */
+  renderCreateForm() {
+    this.container.innerHTML = `
+      <div class="subscription-module">
+        <div class="module-header">
+          <h2>创建订阅链接</h2>
+          <a href="#list" class="pure-button secondary-button">返回列表</a>
+        </div>
+        
+        <form id="create-subscription-form" class="pure-form pure-form-stacked">
+          <!-- 商品信息 -->
+          <fieldset>
+            <legend>商品信息</legend>
+            
+            <div class="form-group">
+              <label for="title">商品名称 *</label>
+              <input type="text" id="title" class="form-control" required>
+            </div>
+            
+            <div class="pure-g">
+              <div class="pure-u-1-2">
+                <div class="form-group">
+                  <label for="amount">价格 *</label>
+                  <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
+                </div>
+              </div>
+              <div class="pure-u-1-2">
+                <div class="form-group">
+                  <label for="currency">币种 *</label>
+                  <select id="currency" class="form-control" required>
+                    <option value="USD">美元 (USD)</option>
+                    <option value="EUR">欧元 (EUR)</option>
+                    <option value="JPY">日元 (JPY)</option>
+                    <option value="CNY">人民币 (CNY)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="description">商品描述</label>
+              <textarea id="description" class="form-control" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label for="image">商品图片</label>
+              <input type="file" id="image" class="form-control" accept="image/*">
+            </div>
+          </fieldset>
+          
+          <!-- 订阅选项 -->
+          <fieldset>
+            <legend>订阅选项</legend>
+            
+            <div class="form-group">
+              <label for="billingFrequency">订阅周期 *</label>
+              <select id="billingFrequency" class="form-control" required>
+                <option value="daily">每天</option>
+                <option value="weekly">每周</option>
+                <option value="monthly" selected>每月</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="totalBillingCycles">订阅期数 *</label>
+              <select id="totalBillingCycles" class="form-control" required>
+                <option value="1">1期</option>
+                <option value="3">3期</option>
+                <option value="6">6期</option>
+                <option value="12">12期</option>
+                <option value="unlimited">永久</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="trialDays">免费试用天数</label>
+              <input type="number" id="trialDays" class="form-control" min="0" value="0">
+            </div>
+          </fieldset>
+          
+          <!-- 账单选项 -->
+          <fieldset>
+            <legend>账单选项</legend>
+            
+            <div class="form-group">
+              <label class="pure-checkbox">
+                <input type="checkbox" id="collectAddress"> 
+                收集客户地址
+              </label>
+              
+              <div id="addressTypeOptions" style="margin-left: 20px; display: none;">
+                <label class="pure-radio">
+                  <input type="radio" name="addressType" value="billing_only" checked> 
+                  仅账单地址
+                </label>
+                <br>
+                <label class="pure-radio">
+                  <input type="radio" name="addressType" value="billing_and_shipping"> 
+                  账单地址和配送地址
+                </label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="pure-checkbox">
+                <input type="checkbox" id="requirePhone"> 
+                要求用户提供手机号
+              </label>
+            </div>
+            
+            <div class="form-group">
+              <label>付款方式</label>
+              <div>
+                <label class="pure-checkbox">
+                  <input type="checkbox" id="cardPayment" checked> 
+                  填写卡信息自动扣款
+                </label>
+                <br>
+                <label class="pure-checkbox">
+                  <input type="checkbox" id="googlePay"> 
+                  Google Pay 自动扣款
+                </label>
+                <br>
+                <label class="pure-checkbox">
+                  <input type="checkbox" id="applePay"> 
+                  Apple Pay 自动扣款
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          
+          <!-- 提交按钮 -->
+          <div class="form-actions">
+            <button type="submit" class="pure-button primary-button">创建订阅链接</button>
+            <a href="#list" class="pure-button secondary-button">取消</a>
+          </div>
+        </form>
+      </div>
+    `;
+    
+    // 绑定事件
+    document.getElementById('collectAddress').addEventListener('change', function() {
+      document.getElementById('addressTypeOptions').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    document.getElementById('create-subscription-form').addEventListener('submit', this.handleFormSubmit.bind(this));
+  },
+  
+  /**
+   * 处理表单提交
+   * @param {Event} e - 表单提交事件
+   */
+  handleFormSubmit(e) {
+    e.preventDefault();
+    
+    // 收集表单数据
+    const formData = {
+      title: document.getElementById('title').value,
+      description: document.getElementById('description').value,
+      amount: parseFloat(document.getElementById('amount').value),
+      currency: document.getElementById('currency').value,
+      billingFrequency: document.getElementById('billingFrequency').value,
+      totalBillingCycles: document.getElementById('totalBillingCycles').value,
+      trialDays: parseInt(document.getElementById('trialDays').value) || 0,
+      requirePhone: document.getElementById('requirePhone').checked,
+      addressCollection: document.getElementById('collectAddress').checked
+        ? document.querySelector('input[name="addressType"]:checked').value
+        : 'none',
+      paymentMethods: []
+    };
+    
+    // 收集支付方式
+    if (document.getElementById('cardPayment').checked) formData.paymentMethods.push('card');
+    if (document.getElementById('googlePay').checked) formData.paymentMethods.push('google_pay');
+    if (document.getElementById('applePay').checked) formData.paymentMethods.push('apple_pay');
+    
+    // 处理图片上传
+    const imageFile = document.getElementById('image').files[0];
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        formData.imageUrl = e.target.result;
+        this.createSubscriptionLink(formData);
+      };
+      reader.readAsDataURL(imageFile);
+    } else {
+      this.createSubscriptionLink(formData);
+    }
+  },
+  
+  /**
+   * 创建订阅链接
+   * @param {Object} formData - 表单数据
+   */
+  createSubscriptionLink(formData) {
+    try {
+      const link = SubscriptionCore.createSubscriptionLink(formData);
+      alert('订阅链接创建成功！');
+      window.location.hash = `#details/${link.id}`;
+    } catch (error) {
+      console.error('创建订阅链接失败:', error);
+      alert('创建订阅链接失败: ' + error.message);
+    }
+  },
+  
+  /**
+   * 渲染订阅链接详情
+   * @param {String} linkId - 订阅链接ID
+   */
+  renderLinkDetails(linkId) {
+    const link = SubscriptionCore.getSubscriptionLink(linkId);
+    if (!link) {
+      this.container.innerHTML = `
+        <div class="error-message">
+          <h3>链接不存在</h3>
+          <a href="#list" class="pure-button primary-button">返回列表</a>
+        </div>
+      `;
+      return;
+    }
+    
+    // 获取订阅实例
+    const instances = SubscriptionCore.getSubscriptionInstancesByLinkId(linkId);
+    
+    this.container.innerHTML = `
+      <div class="subscription-module">
+        <div class="module-header">
+          <h2>订阅链接详情</h2>
+          <a href="#list" class="pure-button secondary-button">返回列表</a>
+        </div>
+        
+        <div class="pure-g">
+          <div class="pure-u-1-2">
+            <div class="detail-section">
+              <h3>基本信息</h3>
+              <table class="pure-table pure-table-bordered">
+                <tbody>
+                  <tr>
+                    <th>商品名</th>
+                    <td>${link.title}</td>
+                  </tr>
+                  <tr>
+                    <th>金额</th>
+                    <td>${this.formatAmount(link.amount, link.currency)}</td>
+                  </tr>
+                  <tr>
+                    <th>状态</th>
+                    <td>
+                      <span class="badge ${link.status === 'active' ? 'badge-success' : 'badge-secondary'}">
+                        ${link.status === 'active' ? '启用' : '停用'}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>扣款频率</th>
+                    <td>${this.getBillingFrequencyText(link.billingFrequency)}</td>
+                  </tr>
+                  <tr>
+                    <th>扣款方式</th>
+                    <td>${link.paymentMethod === 'automatic' ? '自动' : '商家扣款'}</td>
+                  </tr>
+                  <tr>
+                    <th>订阅周期</th>
+                    <td>${this.getBillingFrequencyText(link.billingFrequency)}</td>
+                  </tr>
+                  <tr>
+                    <th>期数</th>
+                    <td>${link.totalBillingCycles === 'unlimited' ? '无限' : link.totalBillingCycles}</td>
+                  </tr>
+                  <tr>
+                    <th>试用天数</th>
+                    <td>${link.trialDays || '无'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="pure-u-1-2">
+            <div class="detail-section">
+              <h3>统计信息</h3>
+              <div class="stats-container">
+                <div class="stat-item">
+                  <div class="stat-value">${instances.length}</div>
+                  <div class="stat-label">已订阅用户数</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">${link.stats.visits || 0}</div>
+                  <div class="stat-label">访问次数</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">${this.formatAmount(link.stats.totalAmount || 0, link.currency)}</div>
+                  <div class="stat-label">已收取金额</div>
+                </div>
+              </div>
+              
+              <div class="link-actions">
+                                <h4>链接操作</h4>
+                <div class="link-url" id="subscription-link-url">
+                  ${window.location.origin}${window.location.pathname.replace('merchant/dashboard.html', '')}customer/subscribe.html?id=${link.shortId}
+                </div>
+                <div class="link-actions-buttons">
+                  <button id="copy-link-btn" class="pure-button secondary-button">
+                    <i class="icon-copy"></i> 复制链接
+                  </button>
+                  <button id="toggle-status-btn" class="pure-button ${link.status === 'active' ? 'secondary-button' : 'primary-button'}">
+                    ${link.status === 'active' ? '停用链接' : '启用链接'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h3>订阅实例</h3>
+          <table class="pure-table pure-table-bordered">
+            <thead>
+              <tr>
+                <th>订阅合同号</th>
+                <th>开始日期</th>
+                <th>到期日期</th>
+                <th>用户邮箱</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${instances.length === 0 
+                ? '<tr><td colspan="6" class="text-center">暂无订阅记录</td></tr>'
+                : instances.map(instance => this.renderInstanceRow(instance)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    
+    // 绑定事件
+    document.getElementById('copy-link-btn').addEventListener('click', () => {
+      const linkUrl = document.getElementById('subscription-link-url').textContent.trim();
+      navigator.clipboard.writeText(linkUrl).then(() => {
+        alert('链接已复制到剪贴板');
+      }).catch(err => {
+        console.error('无法复制链接:', err);
+        alert('无法复制链接，请手动选择并复制');
+      });
+    });
+    
+    document.getElementById('toggle-status-btn').addEventListener('click', () => {
+      const newStatus = link.status === 'active' ? 'disabled' : 'active';
+      link.status = newStatus;
+      link.disabledAt = newStatus === 'disabled' ? new Date().toISOString() : null;
+      
+      if (SubscriptionCore.updateSubscriptionLink(link)) {
+        alert(`链接已${newStatus === 'active' ? '启用' : '停用'}`);
+        this.renderLinkDetails(linkId);
+      } else {
+        alert('操作失败，请重试');
+      }
+    });
+  },
+  
+  /**
+   * 渲染订阅实例行
+   * @param {Object} instance - 订阅实例对象
+   * @returns {String} HTML字符串
+   */
+  renderInstanceRow(instance) {
+    let statusText, statusClass;
+    
+    switch(instance.status) {
+      case 'active':
+        statusText = '生效中';
+        statusClass = 'badge-success';
+        break;
+      case 'trialing':
+        statusText = '试用中';
+        statusClass = 'badge-info';
+        break;
+      case 'pending_payment':
+        statusText = '待扣款';
+        statusClass = 'badge-warning';
+        break;
+      case 'cancelled':
+        statusText = '已取消';
+        statusClass = 'badge-secondary';
+        break;
+      case 'completed':
+        statusText = '已完成';
+        statusClass = 'badge-primary';
+        break;
+      default:
+        statusText = instance.status;
+        statusClass = 'badge-secondary';
+    }
+    
+    return `
+      <tr>
+        <td>${instance.id}</td>
+        <td>${this.formatDate(instance.startDate)}</td>
+        <td>${this.formatDate(instance.endDate)}</td>
+        <td>${instance.customerEmail}</td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td>
+          <a href="#instance/${instance.id}" class="pure-button secondary-button">查看详情</a>
+        </td>
+      </tr>
+    `;
+  },
+  
+  /**
+   * 渲染订阅实例详情
+   * @param {String} instanceId - 订阅实例ID
+   */
+  renderInstanceDetails(instanceId) {
+    const instance = SubscriptionCore.getSubscriptionInstance(instanceId);
+    if (!instance) {
+      this.container.innerHTML = `
+        <div class="error-message">
+          <h3>订阅不存在</h3>
+          <a href="#list" class="pure-button primary-button">返回列表</a>
+        </div>
+      `;
+      return;
+    }
+    
+    // 获取关联的链接
+    const link = SubscriptionCore.getSubscriptionLink(instance.subscriptionLinkId);
+    
+    // 获取交易记录
+    const transactions = SubscriptionCore.getTransactionsByInstanceId(instanceId);
+    
+    this.container.innerHTML = `
+      <div class="subscription-module">
+        <div class="module-header">
+          <h2>订阅详情</h2>
+          <div>
+            <a href="#details/${instance.subscriptionLinkId}" class="pure-button secondary-button">返回订阅链接</a>
+            <a href="#list" class="pure-button secondary-button">返回列表</a>
+          </div>
+        </div>
+        
+        <div class="pure-g">
+          <div class="pure-u-1-2">
+            <div class="detail-section">
+              <h3>订阅基础信息</h3>
+              <table class="pure-table pure-table-bordered">
+                <tbody>
+                  <tr>
+                    <th>订阅状态</th>
+                    <td>
+                      <span class="badge ${this.getStatusClass(instance.status)}">
+                        ${this.getStatusText(instance.status)}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>订阅编号</th>
+                    <td>${instance.id}</td>
+                  </tr>
+                  <tr>
+                    <th>下次扣款时间</th>
+                    <td>${this.formatDate(instance.nextBillingDate)}</td>
+                  </tr>
+                  <tr>
+                    <th>下次扣款金额</th>
+                    <td>${this.formatAmount(instance.nextBillingAmount, instance.currency)}</td>
+                  </tr>
+                  <tr>
+                    <th>时效</th>
+                    <td>${this.formatDate(instance.startDate)} 至 ${this.formatDate(instance.endDate)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="pure-u-1-2">
+            <div class="detail-section">
+              <h3>顾客信息</h3>
+              <table class="pure-table pure-table-bordered">
+                <tbody>
+                  <tr>
+                    <th>客户ID</th>
+                    <td>${instance.customerId}</td>
+                  </tr>
+                  <tr>
+                    <th>用户邮箱</th>
+                    <td>${instance.customerEmail}</td>
+                  </tr>
+                  <tr>
+                    <th>支付方式</th>
+                    <td>${this.getPaymentMethodText(instance.paymentMethod)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h3>订阅详情</h3>
+          <table class="pure-table pure-table-bordered">
+            <tbody>
+              <tr>
+                <th>扣款方式</th>
+                <td>${link?.paymentMethod === 'automatic' ? '自动' : '商家扣款'}</td>
+              </tr>
+              <tr>
+                <th>试用结束于</th>
+                <td>${instance.trialEndsAt ? this.formatDate(instance.trialEndsAt) : '无试用期'}</td>
+              </tr>
+              <tr>
+                <th>产品名称</th>
+                <td>${instance.productName}</td>
+              </tr>
+              <tr>
+                <th>开始日期</th>
+                <td>${this.formatDate(instance.startDate)}</td>
+              </tr>
+              <tr>
+                <th>产品单价</th>
+                <td>${this.formatAmount(instance.productUnitPrice, instance.currency)}</td>
+              </tr>
+              <tr>
+                <th>到期日期</th>
+                <td>${this.formatDate(instance.endDate)}</td>
+              </tr>
+              <tr>
+                <th>产品数量</th>
+                <td>${instance.productQuantity || 1}</td>
+              </tr>
+              <tr>
+                <th>扣款期数</th>
+                <td>${instance.billingCycles ? `${instance.currentCycle}/${instance.billingCycles}` : `${instance.currentCycle}/无限`}</td>
+              </tr>
+              <tr>
+                <th>扣款金额</th>
+                <td>${this.formatAmount(instance.totalAmount, instance.currency)}</td>
+              </tr>
+              <tr>
+                <th>扣款频率</th>
+                <td>${this.getBillingFrequencyText(instance.billingFrequency)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="detail-section">
+          <h3>扣款历史</h3>
+          <table class="pure-table pure-table-bordered">
+            <thead>
+              <tr>
+                <th>交易流水号</th>
+                <th>扣款时间</th>
+                <th>金额</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${transactions.length === 0 
+                ? '<tr><td colspan="4" class="text-center">暂无扣款记录</td></tr>'
+                : transactions.map(transaction => this.renderTransactionRow(transaction)).join('')}
+            </tbody>
+          </table>
+          
+          ${instance.status === 'active' || instance.status === 'trialing' ? `
+          <div class="actions-container">
+            <button id="manual-charge-btn" class="pure-button primary-button">手动执行扣款</button>
+            <button id="cancel-subscription-btn" class="pure-button danger-button">取消订阅</button>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    
+    // 绑定事件
+    if (instance.status === 'active' || instance.status === 'trialing') {
+      document.getElementById('manual-charge-btn').addEventListener('click', () => {
+        if (confirm('确定要执行手动扣款吗？')) {
+          try {
+            const transaction = SubscriptionCore.recordSubscriptionTransaction(
+              instanceId, 
+              instance.nextBillingAmount, 
+              'succeeded'
+            );
+            
+            alert('扣款成功！');
+            this.renderInstanceDetails(instanceId);
+          } catch (error) {
+            console.error('扣款失败:', error);
+            alert('扣款失败: ' + error.message);
+          }
+        }
+      });
+      
+      document.getElementById('cancel-subscription-btn').addEventListener('click', () => {
+        if (confirm('确定要取消此订阅吗？此操作无法撤销。')) {
+          try {
+            instance.status = 'cancelled';
+            instance.cancellationDate = new Date().toISOString();
+            instance.updatedAt = new Date().toISOString();
+            
+            if (SubscriptionCore.updateSubscriptionInstance(instance)) {
+              alert('订阅已取消');
+              this.renderInstanceDetails(instanceId);
+            } else {
+              alert('操作失败，请重试');
+            }
+          } catch (error) {
+            console.error('取消订阅失败:', error);
+            alert('取消订阅失败: ' + error.message);
+          }
+        }
+      });
+    }
+  },
+  
+  /**
+   * 渲染交易记录行
+   * @param {Object} transaction - 交易记录对象
+   * @returns {String} HTML字符串
+   */
+  renderTransactionRow(transaction) {
+    let statusText, statusClass;
+    
+    switch(transaction.status) {
+      case 'succeeded':
+        statusText = '成功';
+        statusClass = 'badge-success';
+        break;
+      case 'failed':
+        statusText = '失败';
+        statusClass = 'badge-danger';
+        break;
+      case 'pending':
+        statusText = '处理中';
+        statusClass = 'badge-warning';
+        break;
+      default:
+        statusText = transaction.status;
+        statusClass = 'badge-secondary';
+    }
+    
+    return `
+      <tr>
+        <td>${transaction.id}</td>
+        <td>${this.formatDate(transaction.transactionDate)}</td>
+        <td>${this.formatAmount(transaction.amount, transaction.currency)}</td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+      </tr>
+    `;
+  },
+  
+  // 工具方法
+  getStatusText(status) {
+    switch(status) {
+      case 'active': return '生效中';
+      case 'trialing': return '试用中';
+      case 'pending_payment': return '待扣款';
+      case 'cancelled': return '已取消';
+      case 'completed': return '已完成';
+      default: return status;
+    }
+  },
+  
+  getStatusClass(status) {
+    switch(status) {
+      case 'active': return 'badge-success';
+      case 'trialing': return 'badge-info';
+      case 'pending_payment': return 'badge-warning';
+      case 'cancelled': return 'badge-secondary';
+      case 'completed': return 'badge-primary';
+      default: return 'badge-secondary';
+    }
+  },
+  
+  getPaymentMethodText(method) {
+    switch(method) {
+      case 'card': return '卡支付';
+      case 'google_pay': return 'Google Pay';
+      case 'apple_pay': return 'Apple Pay';
+      default: return method;
+    }
+  },
+  
+  getBillingFrequencyText(frequency) {
+    switch(frequency) {
+      case 'daily': return '每天';
+      case 'weekly': return '每周';
+      case 'monthly': return '每月';
+      default: return frequency;
+    }
+  },
+  
+  formatDate(dateString) {
+    if (!dateString) return '未指定';
+    const date = new Date(dateString);
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  },
+  
+  formatAmount(amount, currency) {
+    return new Intl.NumberFormat('zh-CN', { 
+      style: 'currency', 
+      currency: currency
+    }).format(amount);
+  }
+};
+```
+
+### 3.3 订阅事件模块 (subscription-events.js)
+
+订阅事件模块负责处理用户交互事件，包括点击、提交表单等。
+
+```javascript
+// subscription-events.js
+const SubscriptionEvents = {
+  /**
+   * 初始化订阅事件模块
+   */
+  init() {
+    // 监听哈希变化
+    window.addEventListener('hashchange', SubscriptionUI.handleRouteChange.bind(SubscriptionUI));
+    
+    // 监听全局事件委托
+    document.addEventListener('click', this.handleGlobalClick.bind(this));
+    
+    console.log('SubscriptionEvents initialized');
+  },
+  
+  /**
+   * 处理全局点击事件
+   * @param {Event} e - 点击事件对象
+   */
+  handleGlobalClick(e) {
+    // 这里可以添加全局事件委托逻辑
+    // 例如模态框关闭等通用功能
+  },
+  
+  /**
+   * 创建自定义事件
+   * @param {String} name - 事件名称
+   * @param {Object} detail - 事件详情
+   * @returns {CustomEvent} 自定义事件对象
+   */
+  createEvent(name, detail = {}) {
+    return new CustomEvent(`subscription:${name}`, {
+      bubbles: true,
+      detail: detail
+    });
+  },
+  
+  /**
+   * 触发自定义事件
+   * @param {String} name - 事件名称
+   * @param {Object} detail - 事件详情
+   * @param {Element} target - 事件目标元素
+   */
+  trigger(name, detail = {}, target = document) {
+    const event = this.createEvent(name, detail);
+    target.dispatchEvent(event);
+  }
+};
+```
+
+### 3.4 订阅样式模块 (subscription-styles.css)
+
+为确保订阅功能拥有一致的视觉风格，我们定义专用的CSS样式。
+
+```css
+/* subscription-styles.css */
+.subscription-module {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.detail-section {
+  margin-bottom: 30px;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0066FF;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.link-url {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 10px 0;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.link-actions-buttons {
+  margin-top: 10px;
+}
+
+.subscription-product {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.product-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  margin-right: 15px;
+  border-radius: 4px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.pricing-details {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.pricing-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pricing-row.highlight {
+  font-weight: bold;
+  color: #0066FF;
+}
+
+.payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.payment-method {
+  flex: 1;
+  min-width: 150px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.payment-method:hover {
+  border-color: #0066FF;
+  background-color: #f0f7ff;
+}
+
+.payment-method input[type="radio"] {
+  margin-right: 8px;
+}
+
+.payment-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  margin-right: 8px;
+}
+
+.actions-container {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.error-box {
+  text-align: center;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+/* 加载指示器 */
+.loading-indicator {
+  text-align: center;
+  padding: 30px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0066FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+```
+
+## 4. 客户端订阅页面实现
+
+### 4.1 订阅页面 (subscribe.html)
+
+我们需要创建一个独立的订阅页面，供用户查看订阅详情并完成订阅流程。
+
+```html
+<!-- customer/subscribe.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅 | Onerway</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
+    <link rel="stylesheet" href="../css/lite-main.css">
+    <link rel="stylesheet" href="../css/subscription.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="../img/logo.png" alt="Onerway Logo" class="logo">
+        </div>
+        
+        <div id="subscription-container">
+            <!-- 内容将由JavaScript动态加载 -->
+            <div class="loading-indicator">
+                <div class="spinner"></div>
+                <p>正在加载订阅信息...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/modules/subscription-core.js"></script>
+    <script src="../js/subscription-client.js"></script>
+</body>
+</html>
+```
+
+### 4.2 客户端订阅逻辑 (subscription-client.js)
+
+```javascript
+// subscription-client.js
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取链接ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const shortId = urlParams.get('id');
+    
+    if (!shortId) {
+        showError('缺少订阅链接参数');
+        return;
+    }
+    
+    // 获取订阅链接信息
+    const link = SubscriptionCore.getSubscriptionLinkByShortId(shortId);
+    
+    if (!link) {
+        showError('无效的订阅链接');
+        return;
+    }
+    
+    // 验证链接状态
+    if (link.status !== 'active') {
+        showError('此订阅链接已失效');
+        return;
+    }
+    
+    // 记录访问
+    SubscriptionCore.recordLinkVisit(link.id);
+    
+    // 渲染订阅页面
+    renderSubscriptionPage(link);
+});
+
+/**
+ * 显示错误信息
+ * @param {String} message - 错误信息
+ */
+function showError(message) {
+    const container = document.getElementById('subscription-container');
+    container.innerHTML = `
+        <div class="error-box">
+            <div class="error-icon">❌</div>
+            <h2>无法加载订阅</h2>
+            <p>${message}</p>
+            <a href="../index.html" class="pure-button primary-button">返回首页</a>
+        </div>
+    `;
+}
+
+/**
+ * 渲染订阅页面
+ * @param {Object} link - 订阅链接对象
+ */
+function renderSubscriptionPage(link) {
+    const container = document.getElementById('subscription-container');
+    
+    container.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h2>${link.title}</h2>
+            </div>
+            <div class="card-body">
+                <div class="subscription-details">
+                    <div class="subscription-product">
+                        ${link.imageUrl ? `<img src="${link.imageUrl}" alt="${link.title}" class="product-image">` : ''}
+                        <div class="product-info">
+                            <h3>${link.title}</h3>
+                            <p class="product-description">${link.description || ''}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="subscription-pricing">
+                        <h4>订阅详情</h4>
+                        <div class="pricing-details">
+                            <div class="pricing-row">
+                                <span>价格:</span>
+                                <span class="pricing-value">${formatAmount(link.amount, link.currency)}</span>
+                            </div>
+                            <div class="pricing-row">
+                                <span>扣款周期:</span>
+                                <span>${getBillingFrequencyText(link.billingFrequency)}</span>
+                            </div>
+                            <div class="pricing-row">
+                                <span>订阅期数:</span>
+                                <span>${link.totalBillingCycles === 'unlimited' ? '无限' : link.totalBillingCycles + '期'}</span>
+                            </div>
+                            ${link.trialDays > 0 ? `
+                            <div class="pricing-row highlight">
+                                <span>免费试用:</span>
+                                <span>${link.trialDays} 天</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="subscription-form" class="pure-form pure-form-stacked">
+                    <h4>订阅信息</h4>
+                    
+                    <div class="form-group">
+                        <label for="email">电子邮箱 *</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+                    
+                    ${link.requirePhone ? `
+                    <div class="form-group">
+                        <label for="phone">手机号码 *</label>
+                        <input type="tel" id="phone" class="form-control" required>
+                    </div>
+                    ` : ''}
+                    
+                    ${link.addressCollection !== 'none' ? `
+                    <div class="form-group">
+                        <label for="address">账单地址 *</label>
+                        <input type="text" id="address" class="form-control" required>
+                    </div>
+                    ` : ''}
+                    
+                    ${link.addressCollection === 'billing_and_shipping' ? `
+                    <div class="form-group">
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="sameAsBilling" checked> 
+                            配送地址与账单地址相同
+                        </label>
+                    </div>
+                    
+                    <div id="shipping-address-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="shippingAddress">配送地址 *</label>
+                            <input type="text" id="shippingAddress" class="form-control">
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <h4>支付方式</h4>
+                    
+                    <div class="payment-methods">
+                        ${link.paymentMethods.includes('card') ? `
+                        <div class="payment-method" data-method="card">
+                            <input type="radio" name="paymentMethod" value="card" id="card-payment" checked>
+                            <label for="card-payment">
+                                <span class="payment-icon">💳</span>
+                                <span class="payment-title">信用卡支付</span>
+                            </label>
+                        </div>
+                        ` : ''}
+                        
+                        ${link.paymentMethods.includes('google_pay') ? `
+                        <div class="payment-method" data-method="google_pay">
+                            <input type="radio" name="paymentMethod" value="google_pay" id="google-pay">
+                            <label for="google-pay">
+                                <span class="payment-icon">G</span>
+                                <span class="payment-title">Google Pay</span>
+                            </label>
+                        </div>
+                        ` : ''}
+                        
+                        ${link.paymentMethods.includes('apple_pay') ? `
+                        <div class="payment-method" data-method="apple_pay">
+                            <input type="radio" name="paymentMethod" value="apple_pay" id="apple-pay">
+                            <label for="apple-pay">
+                                <span class="payment-icon">A</span>
+                                <span class="payment-title">Apple Pay</span>
+                            </label>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div id="card-details" class="payment-details">
+                        <div class="form-group">
+                            <label for="cardNumber">卡号 *</label>
+                            <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        
+                        <div class="pure-g">
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="cardExpiry">到期日 *</label>
+                                    <input type="text" id="cardExpiry" class="form-control" placeholder="MM/YY" required>
+                                </div>
+                            </div>
+                            <div class="pure-u-1-2">
+                                <div class="form-group">
+                                    <label for="cardCvc">安全码 *</label>
+                                    <input type="text" id="cardCvc" class="form-control" placeholder="CVC" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="terms-agreement">
+                        <label class="pure-checkbox">
+                            <input type="checkbox" id="terms-agreement" required> 
+                            我同意<a href="#" target="_blank">服务条款</a>和<a href="#" target="_blank">隐私政策</a>，并授权按照上述订阅计划定期付款。
+                        </label>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="pure-button primary-button" id="submit-subscription">
+                            完成订阅
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // 绑定事件
+    if (link.addressCollection === 'billing_and_shipping') {
+        document.getElementById('sameAsBilling').addEventListener('change', function() {
+            document.getElementById('shipping-address-fields').style.display = this.checked ? 'none' : 'block';
+            document.getElementById('shippingAddress').required = !this.checked;
+        });
+    }
+    
+    // 支付方式切换
+    document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            document.querySelectorAll('.payment-details').forEach(details => {
+                details.style.display = 'none';
+            });
+            
+            const methodType = radio.value;
+            if (methodType === 'card') {
+                document.getElementById('card-details').style.display = 'block';
+            }
+        });
+    });
+    
+    // 表单提交
+    document.getElementById('subscription-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 收集表单数据
+        const formData = {
+            email: document.getElementById('email').value,
+            phone: link.requirePhone ? document.getElementById('phone').value : null,
+            address: link.addressCollection !== 'none' ? document.getElementById('address').value : null,
+            shippingAddress: link.addressCollection === 'billing_and_shipping' && !document.getElementById('sameAsBilling').checked 
+                ? document.getElementById('shippingAddress').value 
+                : null,
+            paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+            cardDetails: document.querySelector('input[name="paymentMethod"]:checked').value === 'card' ? {
+                number: document.getElementById('cardNumber').value,
+                expiry: document.getElementById('cardExpiry').value,
+                cvc: document.getElementById('cardCvc').value
+            } : null
+        };
+        
+        // 在实际应用中，这里会进行支付处理
+        // 本示例中，我们简单模拟成功的订阅流程
+        try {
+            // 创建订阅实例
+            const instance = SubscriptionCore.createSubscriptionInstance(link.id, {
+                email: formData.email,
+                customerId: null, // 在真实环境中，这会是一个实际的客户ID
+                paymentMethod: formData.paymentMethod
+            });
+            
+            // 如果有免费试用期，不会立即创建第一笔交易
+            if (!instance.trialEndsAt) {
+                // 记录首次付款
+                SubscriptionCore.recordSubscriptionTransaction(
+                    instance.id,
+                    instance.nextBillingAmount,
+                    'succeeded'
+                );
+            }
+            
+            // 重定向到成功页面
+            window.location.href = `subscription-success.html?id=${instance.id}`;
+        } catch (error) {
+            console.error('订阅失败:', error);
+            alert('订阅失败: ' + error.message);
+        }
+    });
+}
+
+/**
+ * 格式化金额
+ * @param {Number} amount - 金额
+ * @param {String} currency - 货币代码
+ * @returns {String} 格式化后的金额
+ */
+function formatAmount(amount, currency) {
+    return new Intl.NumberFormat('zh-CN', { 
+        style: 'currency', 
+        currency: currency
+    }).format(amount);
+}
+
+/**
+ * 获取扣款周期文本
+ * @param {String} frequency - 扣款周期
+ * @returns {String} 扣款周期文本
+ */
+function getBillingFrequencyText(frequency) {
+    switch(frequency) {
+        case 'daily': return '每天';
+        case 'weekly': return '每周';
+        case 'monthly': return '每月';
+        default: return frequency;
+    }
+}
+```
+
+## 5. 与现有系统集成
+
+### 5.1 添加订阅入口到主导航
+
+在dashboard.html中添加订阅模块入口点。
+
+```html
+<!-- dashboard.html 导航部分修改 -->
+<div class="dropdown-menu">
+    <a href="#" class="dropdown-item" id="createPaymentLink">支付链接</a>
+    <a href="#" class="dropdown-item" id="createManualPayment">手动付款</a>
+    <a href="#" class="dropdown-item" id="createDynamicPayment">动态金额付款</a>
+    <!-- 新增订阅链接选项 -->
+    <a href="#" class="dropdown-item" id="createSubscriptionLink">订阅链接</a>
+</div>
+```
+
+### 5.2 集成到dashboard.html
+
+在dashboard.html中添加订阅模块容器和初始化代码。
+
+```html
+<!-- 在dashboard.html中添加 -->
+<div class="card" id="subscription-module-container">
+    <!-- 订阅模块将在这里渲染 -->
+</div>
+
+<!-- 在现有脚本之后添加 -->
+<script src="../js/modules/module-loader.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化订阅模块
+        ModuleLoader.loadSubscriptionModule('subscription-module-container');
+        
+        // 订阅模块加载完成后的处理
+        document.addEventListener('subscription-module-loaded', function() {
+            console.log('订阅模块加载完成');
+            
+            // 添加订阅链接按钮事件
+            const createSubscriptionLink = document.getElementById('createSubscriptionLink');
+            if (createSubscriptionLink) {
+                createSubscriptionLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dropdownMenu = document.querySelector('.dropdown-menu');
+                    if (dropdownMenu) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                    window.location.hash = '#create';
+                });
+            }
+        });
+    });
+</script>
+```
+
+### 5.3 添加订阅模块CSS
+
+创建专门的CSS文件用于订阅模块UI。
+
+```css
+/* subscription.css */
+.subscription-module {
+  padding: 15px;
+}
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.detail-section {
+  margin-bottom: 25px;
+}
+
+.stats-container {
+  display: flex;
+  justify-content: space-around;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.stat-item {
+  padding: 10px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0066FF;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.link-url {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 10px 0;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.link-actions-buttons {
+  margin-top: 10px;
+}
+
+.subscription-product {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.product-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  margin-right: 15px;
+  border-radius: 4px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.pricing-details {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.pricing-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pricing-row.highlight {
+  font-weight: bold;
+  color: #0066FF;
+}
+
+.payment-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.payment-method {
+  flex: 1;
+  min-width: 150px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.payment-method:hover {
+  border-color: #0066FF;
+  background-color: #f0f7ff;
+}
+
+.payment-method input[type="radio"] {
+  margin-right: 8px;
+}
+
+.payment-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  margin-right: 8px;
+}
+
+.actions-container {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.error-box {
+  text-align: center;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+/* 加载指示器 */
+.loading-indicator {
+  text-align: center;
+  padding: 30px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0066FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+```
+
+## 6. 实现注意事项
+
+### 6.1 浏览器兼容性
+
+该模块化设计主要使用现代JavaScript特性，确保兼容以下浏览器版本：
+
+- Chrome 60+
+- Firefox 55+
+- Safari 10.1+
+- Edge 16+
+
+如需支持更旧的浏览器，可能需要使用Babel进行转译或添加polyfill。
+
+### 6.2 事件委托优化
+
+由于UI会动态生成和更新，使用事件委托模式可以更有效地处理用户交互：
+
+```javascript
+// 而不是为每个元素添加监听器
+document.addEventListener('click', function(event) {
+  // 处理支付方式选择
+  if (event.target.closest('.payment-method')) {
+    // 处理点击事件
+  }
+  
+  // 处理按钮点击等
+  if (event.target.matches('#copy-link-btn')) {
+    // 处理复制链接
+  }
+});
+```
+
+### 6.3 错误处理与日志
+
+在整个模块中实施一致的错误处理策略：
+
+```javascript
+// 错误处理示例
+try {
+  // 操作代码
+} catch (error) {
+  console.error('Subscription module error:', error);
+  // 提供友好的用户反馈
+  showErrorMessage(error.message || '发生未知错误');
+  // 可选: 发送错误到监控系统
+}
+```
+
+### 6.4 本地存储限制
+
+使用localStorage存在以下限制，需要注意：
+
+- 大小限制：通常为5MB左右
+- 仅支持字符串：需要使用JSON序列化/反序列化
+- 同域限制：不同页面需要相同域名才能共享数据
+
+对于生产环境，应考虑实施数据过期和清理策略，防止存储溢出。
+
+## 7. 开发与测试计划
+
+### 7.1 开发阶段
+
+1. **第一阶段**：核心功能开发
+   - 实现subscription-core.js核心逻辑
+   - 编写基础数据管理功能
+   - 创建基本UI骨架
+
+2. **第二阶段**：UI和交互开发
+   - 完成所有UI视图
+   - 实现用户交互和事件处理
+   - 开发表单验证和提交逻辑
+
+3. **第三阶段**：集成和优化
+   - 与现有系统集成
+   - 性能优化和边缘情况处理
+   - 兼容性测试和修复
+
+### 7.2 测试计划
+
+1. **单元测试**：
+   - 核心函数测试
+   - 数据处理逻辑测试
+   - 模拟数据生成和验证
+
+2. **集成测试**：
+   - 模块间协作测试
+   - 订阅创建到支付流程测试
+   - 与现有系统集成测试
+
+3. **用户界面测试**：
+   - 响应式布局测试
+   - 表单提交和验证测试
+   - 交互逻辑和用户体验测试
+
+4. **端到端测试**：
+   - 完整订阅流程测试
+   - 异常场景测试
+   - 浏览器兼容性测试
+
+## 8. 部署与维护
+
+### 8.1 部署步骤
+
+1. 创建必要的目录结构
+   ```
+   /js/modules/
+   /css/
+   /customer/
+   ```
+
+2. 添加新文件
+   - 核心JavaScript模块
+   - CSS样式文件
+   - HTML页面模板
+
+3. 更新现有文件
+   - 修改dashboard.html添加模块加载代码
+   - 更新导航部分
+   - 集成module-loader.js
+
+### 8.2 维护考虑
+
+1. **监控与分析**
+   - 添加基本使用统计
+   - 实现错误监控和报告
+   - 用户行为分析
+
+2. **更新策略**
+   - 模块化设计便于增量更新
+   - 版本控制和更新日志
+   - 向后兼容性考虑
+
+3. **性能优化**
+   - 定期审查和优化存储使用
+   - 减少不必要的DOM操作
+   - 优化资源加载顺序
+
+## 9. 结论
+
+本方案通过模块化设计提供了一个灵活、可扩展的订阅功能实现方式，能够以最小的代码修改集成到现有系统中。关键优势包括：
+
+- **低耦合**：订阅功能模块与现有系统松散耦合
+- **易扩展**：模块化设计便于未来功能增强
+- **渐进式集成**：可以逐步添加和测试功能
+- **代码组织清晰**：职责分离，便于维护
+
+遵循本方案实施，将能够在保持现有功能正常运作的同时，顺利添加完整的订阅功能，为用户提供更丰富的支付选项。

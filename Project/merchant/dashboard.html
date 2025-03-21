@@ -7,650 +7,692 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
     <link rel="stylesheet" href="../css/lite-main.css">
+    <link rel="stylesheet" href="../css/new-nav.css">
 </head>
 <body>
-    <div class="nav-container">
-        <div class="container">
-            <ul class="nav">
-                <li class="nav-item"><a class="nav-link active" href="dashboard.html">控制台</a></li>
-                <li class="nav-item"><a class="nav-link" href="manage-links.html">管理链接</a></li>
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo-sm.png" alt="Onerway Logo" class="sidebar-logo">
+                <h3>商户中心</h3>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item active">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <i class="nav-icon">📊</i>
+                        <span>控制台</span>
+                    </a>
+                    <!-- 控制台子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item">
+                            <a href="manage-links.html" class="sidebar-subnav-link">管理链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- 预留订阅功能导航入口 -->
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">🔄</i>
+                        <span>订阅管理</span>
+                    </a>
+                    <!-- 订阅管理子菜单 -->
+                    <ul class="sidebar-subnav" style="display: none;">
+                        <li class="sidebar-subnav-item">
+                            <a href="#" class="sidebar-subnav-link">订阅链接</a>
+                        </li>
+                        <li class="sidebar-subnav-item">
+                            <a href="#" class="sidebar-subnav-link">订阅记录</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">⚙️</i>
+                        <span>设置</span>
+                    </a>
+                </li>
             </ul>
         </div>
-    </div>
 
-    <div class="container">
-        <div class="header-actions">
-            <h2>控制台</h2>
-            <div class="dropdown">
-                <button id="createLinkBtn" class="pure-button primary-button dropdown-toggle">
-                    创建新链接 <span class="dropdown-arrow">▼</span>
-                </button>
-                <div class="dropdown-menu">
-                    <a href="#" class="dropdown-item" id="createPaymentLink">支付链接</a>
-                    <a href="#" class="dropdown-item" id="createManualPayment">手动付款</a>
-                    <a href="#" class="dropdown-item" id="createDynamicPayment">动态金额付款</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 数据概览 -->
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="stat-content">
-                            <div class="stat-icon">💰</div>
-                            <div class="stat-info">
-                                <h3 id="totalLinks">0</h3>
-                                <p>活跃链接</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="stat-content">
-                            <div class="stat-icon">👁️</div>
-                            <div class="stat-info">
-                                <h3 id="totalVisits">0</h3>
-                                <p>总访问</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="stat-content">
-                            <div class="stat-icon">✅</div>
-                            <div class="stat-info">
-                                <h3 id="totalConversions">0</h3>
-                                <p>成功支付</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 最近链接 -->
-        <div class="card">
-            <div class="card-header">
-                <h3>最近链接</h3>
-                <a href="manage-links.html" class="pure-button secondary-button">查看全部</a>
-            </div>
-            <div class="card-body">
-                <table class="pure-table pure-table-bordered">
-                    <thead>
-                        <tr>
-                            <th>商品编号</th>
-                            <th>名称</th>
-                            <th>金额</th>
-                            <th>创建日期</th>
-                            <th>状态</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentLinksTable">
-                        <tr>
-                            <td colspan="4" class="text-center">加载中...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- 最近交易 -->
-        <div class="card">
-            <div class="card-header">
-                <h3>最近交易</h3>
-            </div>
-            <div class="card-body">
-                <table class="pure-table pure-table-bordered">
-                    <thead>
-                        <tr>
-                            <th>交易ID</th>
-                            <th>商品名称</th>
-                            <th>金额</th>
-                            <th>支付方式</th>
-                            <th>日期</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentTransactionsTable">
-                        <tr>
-                            <td colspan="4" class="text-center">加载中...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 在"最近交易"之后添加"产品目录"部分 -->
-        <div class="card">
-            <div class="card-header">
-                <h3>产品目录</h3>
-                <button id="createProductBtn" class="pure-button primary-button">创建产品</button>
-            </div>
-            <div class="card-body">
-                <table class="pure-table pure-table-bordered">
-                    <thead>
-                        <tr>
-                            <th>图片</th>
-                            <th>商品名</th>
-                            <th>定价</th>
-                            <th>商品描述</th>
-                            <th>创建日期</th>
-                            <th>更新日期</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTable">
-                        <tr>
-                            <td colspan="6" class="text-center">暂无产品数据</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- 在控制台页面添加创建链接模态框 -->
-    <div id="createLinkModal" class="pure-modal">
-        <div class="pure-modal-overlay" onclick="closeModal()"></div>
-        <div class="pure-modal-container">
-            <div class="pure-modal-header">
-                <h4>创建支付链接</h4>
-                <button class="pure-modal-close" onclick="closeModal()">×</button>
-            </div>
-            <div class="pure-modal-body">
-                <form id="createLinkForm" class="pure-form pure-form-stacked">
-                    <!-- 1. 商品信息 -->
-                    <h5>商品信息</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label for="selectProduct">选择商品</label>
-                        <select id="selectProduct" class="form-control">
-                            <option value="">选择已有商品</option>
-                            <!-- 动态加载商品选项 -->
-                        </select>
-                    </div>
-                    
-                    <button type="button" class="pure-button secondary-button" id="addNewProductBtn">
-                        <i class="icon-plus"></i> 新增商品
-                    </button>
-                    
-                    <div id="productDetails" style="margin-top: 15px; display: none;">
-                        <div class="form-group">
-                            <label for="title">商品名称 *</label>
-                            <input type="text" id="title" class="form-control" required maxlength="50">
-                        </div>
-                        
-                        <div class="pure-g">
-                            <div class="pure-u-1-2">
-                                <div class="form-group">
-                                    <label for="amount">价格 *</label>
-                                    <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
-                                </div>
-                            </div>
-                            <div class="pure-u-1-2">
-                                <div class="form-group">
-                                    <label for="currency">币种 *</label>
-                                    <select id="currency" class="form-control" required>
-                                        <option value="USD">美元 (USD)</option>
-                                        <option value="EUR">欧元 (EUR)</option>
-                                        <option value="JPY">日元 (JPY)</option>
-                                        <option value="CNY">人民币 (CNY)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="description">商品描述</label>
-                            <textarea id="description" class="form-control" rows="3" maxlength="200"></textarea>
-                            <small>最多200个字符，描述仅显示在商户管理界面，不会展示给客户。</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="image">商品图片</label>
-                            <input type="file" id="image" class="form-control" accept="image/png, image/jpeg">
-                            <small>支持JPG/PNG，最大2MB</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="priceNote">价格说明</label>
-                            <textarea id="priceNote" class="form-control" rows="2"></textarea>
-                            <small>价格说明仅显示给商户，不会展示给客户</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="productCode">商品编号 *</label>
-                            <input type="text" id="productCode" class="form-control" required maxlength="20">
-                            <small>输入唯一商品编号，不可重复</small>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label class="pure-checkbox">
-                            <input type="checkbox" id="allowQuantityAdjustment"> 
-                            允许客户调整数量
-                        </label>
-                    </div>
-                    
-                    <!-- 2. 账单选项 -->
-                    <h5 style="margin-top: 20px;">账单选项</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label class="pure-checkbox">
-                            <input type="checkbox" id="collectAddress"> 
-                            收集客户地址
-                        </label>
-                        
-                        <div id="addressTypeOptions" style="margin-left: 25px; margin-top: 10px; display: none;">
-                            <label class="pure-radio">
-                                <input type="radio" name="addressType" value="billing" checked> 
-                                仅账单地址
-                            </label>
-                            <br>
-                            <label class="pure-radio">
-                                <input type="radio" name="addressType" value="both"> 
-                                账单地址和配送地址
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="pure-checkbox">
-                            <input type="checkbox" id="requirePhone"> 
-                            要求用户提供手机号
-                        </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>支付方式</label>
-                        <div style="margin-top: 10px;">
-                            <label class="pure-checkbox">
-                                <input type="checkbox" id="cardPayment" checked> 
-                                卡支付
-                            </label>
-                            <br>
-                            <label class="pure-checkbox">
-                                <input type="checkbox" id="googlePay"> 
-                                Google Pay
-                            </label>
-                            <br>
-                            <label class="pure-checkbox">
-                                <input type="checkbox" id="applePay"> 
-                                Apple Pay
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- 3. 高级选项 -->
-                    <h5 style="margin-top: 20px;">高级选项</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <button type="button" class="pure-button secondary-button" id="addCustomFieldBtn">
-                            <i class="icon-plus"></i> 添加自定义字段
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="container">
+                <div class="header-actions">
+                    <h2>控制台</h2>
+                    <div class="dropdown">
+                        <button id="createLinkBtn" class="pure-button primary-button dropdown-toggle">
+                            创建新链接 <span class="dropdown-arrow">▼</span>
                         </button>
-                        
-                        <div id="customFieldsContainer" style="margin-top: 10px;">
-                            <!-- 动态添加的自定义字段将在这里显示 -->
+                        <div class="dropdown-menu">
+                            <a href="#" class="dropdown-item" id="createPaymentLink">支付链接</a>
+                            <a href="#" class="dropdown-item" id="createManualPayment">手动付款</a>
+                            <a href="#" class="dropdown-item" id="createDynamicPayment">动态金额付款</a>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label class="pure-checkbox">
-                            <input type="checkbox" id="usePromoCode"> 
-                            使用促销码
-                        </label>
+                </div>
+                
+                <!-- 数据概览 -->
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="stat-content">
+                                    <div class="stat-icon">💰</div>
+                                    <div class="stat-info">
+                                        <h3 id="totalLinks">0</h3>
+                                        <p>活跃链接</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- 4. 支付后查看 -->
-                    <h5 style="margin-top: 20px;">支付后查看</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <div>
-                            <label class="pure-radio">
-                                <input type="radio" name="postPaymentAction" value="showConfirmation" checked> 
-                                显示确认页面
-                            </label>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="stat-content">
+                                    <div class="stat-icon">👁️</div>
+                                    <div class="stat-info">
+                                        <h3 id="totalVisits">0</h3>
+                                        <p>总访问</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="stat-content">
+                                    <div class="stat-icon">✅</div>
+                                    <div class="stat-info">
+                                        <h3 id="totalConversions">0</h3>
+                                        <p>成功支付</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 最近链接 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>最近链接</h3>
+                        <a href="manage-links.html" class="pure-button secondary-button">查看全部</a>
+                    </div>
+                    <div class="card-body">
+                        <table class="pure-table pure-table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>商品编号</th>
+                                    <th>名称</th>
+                                    <th>金额</th>
+                                    <th>创建日期</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentLinksTable">
+                                <tr>
+                                    <td colspan="4" class="text-center">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 最近交易 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>最近交易</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="pure-table pure-table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>交易ID</th>
+                                    <th>商品名称</th>
+                                    <th>金额</th>
+                                    <th>支付方式</th>
+                                    <th>日期</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTransactionsTable">
+                                <tr>
+                                    <td colspan="4" class="text-center">加载中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 在"最近交易"之后添加"产品目录"部分 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>产品目录</h3>
+                        <button id="createProductBtn" class="pure-button primary-button">创建产品</button>
+                    </div>
+                    <div class="card-body">
+                        <table class="pure-table pure-table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>图片</th>
+                                    <th>商品名</th>
+                                    <th>定价</th>
+                                    <th>商品描述</th>
+                                    <th>创建日期</th>
+                                    <th>更新日期</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTable">
+                                <tr>
+                                    <td colspan="6" class="text-center">暂无产品数据</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 在控制台页面添加创建链接模态框 -->
+            <div id="createLinkModal" class="pure-modal">
+                <div class="pure-modal-overlay" onclick="closeModal()"></div>
+                <div class="pure-modal-container">
+                    <div class="pure-modal-header">
+                        <h4>创建支付链接</h4>
+                        <button class="pure-modal-close" onclick="closeModal()">×</button>
+                    </div>
+                    <div class="pure-modal-body">
+                        <form id="createLinkForm" class="pure-form pure-form-stacked">
+                            <!-- 1. 商品信息 -->
+                            <h5>商品信息</h5>
+                            <hr>
                             
-                            <div id="confirmationMessageOptions" style="margin-left: 25px; margin-top: 10px;">
+                            <div class="form-group">
+                                <label for="selectProduct">选择商品</label>
+                                <select id="selectProduct" class="form-control">
+                                    <option value="">选择已有商品</option>
+                                    <!-- 动态加载商品选项 -->
+                                </select>
+                            </div>
+                            
+                            <button type="button" class="pure-button secondary-button" id="addNewProductBtn">
+                                <i class="icon-plus"></i> 新增商品
+                            </button>
+                            
+                            <div id="productDetails" style="margin-top: 15px; display: none;">
+                                <div class="form-group">
+                                    <label for="title">商品名称 *</label>
+                                    <input type="text" id="title" class="form-control" required maxlength="50">
+                                </div>
+                                
+                                <div class="pure-g">
+                                    <div class="pure-u-1-2">
+                                        <div class="form-group">
+                                            <label for="amount">价格 *</label>
+                                            <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required>
+                                        </div>
+                                    </div>
+                                    <div class="pure-u-1-2">
+                                        <div class="form-group">
+                                            <label for="currency">币种 *</label>
+                                            <select id="currency" class="form-control" required>
+                                                <option value="USD">美元 (USD)</option>
+                                                <option value="EUR">欧元 (EUR)</option>
+                                                <option value="JPY">日元 (JPY)</option>
+                                                <option value="CNY">人民币 (CNY)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="description">商品描述</label>
+                                    <textarea id="description" class="form-control" rows="3" maxlength="200"></textarea>
+                                    <small>最多200个字符，描述仅显示在商户管理界面，不会展示给客户。</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="image">商品图片</label>
+                                    <input type="file" id="image" class="form-control" accept="image/png, image/jpeg">
+                                    <small>支持JPG/PNG，最大2MB</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="priceNote">价格说明</label>
+                                    <textarea id="priceNote" class="form-control" rows="2"></textarea>
+                                    <small>价格说明仅显示给商户，不会展示给客户</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="productCode">商品编号 *</label>
+                                    <input type="text" id="productCode" class="form-control" required maxlength="20">
+                                    <small>输入唯一商品编号，不可重复</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-top: 15px;">
                                 <label class="pure-checkbox">
-                                    <input type="checkbox" id="useCustomMessage"> 
-                                    使用自定义消息
+                                    <input type="checkbox" id="allowQuantityAdjustment"> 
+                                    允许客户调整数量
+                                </label>
+                            </div>
+                            
+                            <!-- 2. 账单选项 -->
+                            <h5 style="margin-top: 20px;">账单选项</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label class="pure-checkbox">
+                                    <input type="checkbox" id="collectAddress"> 
+                                    收集客户地址
                                 </label>
                                 
-                                <div id="customMessageField" style="margin-top: 10px; display: none;">
-                                    <textarea id="customMessage" class="form-control" rows="3" placeholder="输入支付成功后显示的自定义消息"></textarea>
+                                <div id="addressTypeOptions" style="margin-left: 25px; margin-top: 10px; display: none;">
+                                    <label class="pure-radio">
+                                        <input type="radio" name="addressType" value="billing" checked> 
+                                        仅账单地址
+                                    </label>
+                                    <br>
+                                    <label class="pure-radio">
+                                        <input type="radio" name="addressType" value="both"> 
+                                        账单地址和配送地址
+                                    </label>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <label class="pure-radio">
-                                <input type="radio" name="postPaymentAction" value="redirect"> 
-                                不显示确认页面，跳转到网站
-                            </label>
                             
-                            <div id="redirectUrlField" style="margin-left: 25px; margin-top: 10px; display: none;">
-                                <label for="redirectUrl">跳转网址</label>
-                                <input type="url" id="redirectUrl" class="form-control" placeholder="https://example.com/thank-you">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 在表单中添加或确认这些单选按钮存在 -->
-                    <div class="form-group">
-                        <label>金额类型</label>
-                        <div>
-                            <label class="pure-radio">
-                                <input type="radio" name="amountType" value="FIXED" checked> 固定金额
-                            </label>
-                            <label class="pure-radio">
-                                <input type="radio" name="amountType" value="DYNAMIC"> 动态金额
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>有效期</label>
-                        <div>
-                            <label class="pure-radio">
-                                <input type="radio" name="validityType" value="PERMANENT" checked> 永久有效
-                            </label>
-                            <label class="pure-radio">
-                                <input type="radio" name="validityType" value="FIXED"> 指定截止日期
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="pure-modal-footer">
-                <button type="button" class="pure-button secondary-button" onclick="closeModal()">取消</button>
-                <button type="button" class="pure-button primary-button" id="submitLinkForm">创建链接</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 在页面底部添加手动付款模态框 -->
-    <div id="manualPaymentModal" class="pure-modal">
-        <div class="pure-modal-overlay" onclick="closeManualModal()"></div>
-        <div class="pure-modal-container">
-            <div class="pure-modal-header">
-                <h4>手动付款</h4>
-                <button class="pure-modal-close" onclick="closeManualModal()">×</button>
-            </div>
-            <div class="pure-modal-body">
-                <form id="manualPaymentForm" class="pure-form pure-form-stacked">
-                    <!-- 商品信息 -->
-                    <h5>商品信息</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label for="manual_title">商品名称 *</label>
-                        <input type="text" id="manual_title" class="form-control" required maxlength="50">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="manual_productCode">商品编号 *</label>
-                        <input type="text" id="manual_productCode" class="form-control" required maxlength="20">
-                        <small>输入唯一商品编号，不可重复</small>
-                    </div>
-                    
-                    <div class="pure-g">
-                        <div class="pure-u-1-2">
                             <div class="form-group">
-                                <label for="manual_amount">金额 *</label>
-                                <input type="number" id="manual_amount" class="form-control" step="0.01" min="0.01" required>
-                            </div>
-                        </div>
-                        <div class="pure-u-1-2">
-                            <div class="form-group">
-                                <label for="manual_currency">货币 *</label>
-                                <select id="manual_currency" class="form-control" required>
-                                    <option value="USD">美元 (USD)</option>
-                                    <option value="EUR">欧元 (EUR)</option>
-                                    <option value="JPY">日元 (JPY)</option>
-                                    <option value="CNY">人民币 (CNY)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 客户信息 -->
-                    <h5 style="margin-top: 20px;">客户信息</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label for="customer_name">客户姓名 *</label>
-                        <input type="text" id="customer_name" class="form-control" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="customer_email">客户邮箱</label>
-                        <input type="email" id="customer_email" class="form-control">
-                    </div>
-                    
-                    <!-- 卡片信息 -->
-                    <h5 style="margin-top: 20px;">支付卡信息</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label for="card_number">卡号 *</label>
-                        <input type="text" id="card_number" class="form-control" required placeholder="XXXX XXXX XXXX XXXX">
-                    </div>
-                    
-                    <div class="pure-g">
-                        <div class="pure-u-1-2">
-                            <div class="form-group">
-                                <label for="card_expiry">有效期 *</label>
-                                <input type="text" id="card_expiry" class="form-control" required placeholder="MM/YY">
-                            </div>
-                        </div>
-                        <div class="pure-u-1-2">
-                            <div class="form-group">
-                                <label for="card_cvc">安全码 *</label>
-                                <input type="text" id="card_cvc" class="form-control" required placeholder="CVC">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="pure-modal-footer">
-                <button type="button" class="pure-button secondary-button" onclick="closeManualModal()">取消</button>
-                <button type="button" class="pure-button primary-button" id="submitManualPayment">处理付款</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 在页面底部添加动态金额付款模态框 -->
-    <div id="dynamicPaymentModal" class="pure-modal">
-        <div class="pure-modal-overlay" onclick="closeDynamicModal()"></div>
-        <div class="pure-modal-container">
-            <div class="pure-modal-header">
-                <h4>创建动态金额付款链接</h4>
-                <button class="pure-modal-close" onclick="closeDynamicModal()">×</button>
-            </div>
-            <div class="pure-modal-body">
-                <form id="dynamicPaymentForm" class="pure-form pure-form-stacked">
-                    <!-- 基础信息 -->
-                    <h5>基础信息</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label for="dynamic_title">商品名称 *</label>
-                        <input type="text" id="dynamic_title" class="form-control" required maxlength="50">
-                        <small>最多50个字符</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="dynamic_description">商品描述</label>
-                        <textarea id="dynamic_description" class="form-control" rows="3" maxlength="200"></textarea>
-                        <small>最多200个字符，描述仅显示在商户管理界面</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="dynamic_productCode">商品编号 *</label>
-                        <input type="text" id="dynamic_productCode" class="form-control" required maxlength="20">
-                        <small>输入唯一商品编号，不可重复</small>
-                    </div>
-                    
-                    <!-- 金额设置 -->
-                    <h5 style="margin-top: 20px;">金额设置</h5>
-                    <hr>
-                    
-                    <div class="pure-g">
-                        <div class="pure-u-1-3">
-                            <div class="form-group">
-                                <label for="dynamic_minAmount">最小金额</label>
-                                <input type="number" id="dynamic_minAmount" class="form-control" step="0.01" min="0.01">
-                            </div>
-                        </div>
-                        <div class="pure-u-1-3">
-                            <div class="form-group">
-                                <label for="dynamic_maxAmount">最大金额</label>
-                                <input type="number" id="dynamic_maxAmount" class="form-control" step="0.01" min="0.01">
-                            </div>
-                        </div>
-                        <div class="pure-u-1-3">
-                            <div class="form-group">
-                                <label for="dynamic_currency">货币 *</label>
-                                <select id="dynamic_currency" class="form-control" required>
-                                    <option value="USD">美元 (USD)</option>
-                                    <option value="EUR">欧元 (EUR)</option>
-                                    <option value="JPY">日元 (JPY)</option>
-                                    <option value="CNY">人民币 (CNY)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 高级设置 -->
-                    <h5 style="margin-top: 20px;">高级设置</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label>有效期设置</label>
-                        <div class="pure-g">
-                            <div class="pure-u-1-2">
-                                <label class="pure-radio">
-                                    <input type="radio" name="dynamic_validityType" value="PERMANENT" checked> 永久有效
+                                <label class="pure-checkbox">
+                                    <input type="checkbox" id="requirePhone"> 
+                                    要求用户提供手机号
                                 </label>
                             </div>
-                            <div class="pure-u-1-2">
-                                <label class="pure-radio">
-                                    <input type="radio" name="dynamic_validityType" value="FIXED"> 设置有效期
+                            
+                            <div class="form-group">
+                                <label>支付方式</label>
+                                <div style="margin-top: 10px;">
+                                    <label class="pure-checkbox">
+                                        <input type="checkbox" id="cardPayment" checked> 
+                                        卡支付
+                                    </label>
+                                    <br>
+                                    <label class="pure-checkbox">
+                                        <input type="checkbox" id="googlePay"> 
+                                        Google Pay
+                                    </label>
+                                    <br>
+                                    <label class="pure-checkbox">
+                                        <input type="checkbox" id="applePay"> 
+                                        Apple Pay
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- 3. 高级选项 -->
+                            <h5 style="margin-top: 20px;">高级选项</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <button type="button" class="pure-button secondary-button" id="addCustomFieldBtn">
+                                    <i class="icon-plus"></i> 添加自定义字段
+                                </button>
+                                
+                                <div id="customFieldsContainer" style="margin-top: 10px;">
+                                    <!-- 动态添加的自定义字段将在这里显示 -->
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="pure-checkbox">
+                                    <input type="checkbox" id="usePromoCode"> 
+                                    使用促销码
                                 </label>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div id="dynamicValidityFields" style="display: none;">
-                        <div class="pure-g">
-                            <div class="pure-u-1-2">
-                                <div class="form-group">
-                                    <label for="dynamic_endDate">截止日期</label>
-                                    <input type="date" id="dynamic_endDate" class="form-control">
+                            
+                            <!-- 4. 支付后查看 -->
+                            <h5 style="margin-top: 20px;">支付后查看</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <div>
+                                    <label class="pure-radio">
+                                        <input type="radio" name="postPaymentAction" value="showConfirmation" checked> 
+                                        显示确认页面
+                                    </label>
+                                    
+                                    <div id="confirmationMessageOptions" style="margin-left: 25px; margin-top: 10px;">
+                                        <label class="pure-checkbox">
+                                            <input type="checkbox" id="useCustomMessage"> 
+                                            使用自定义消息
+                                        </label>
+                                        
+                                        <div id="customMessageField" style="margin-top: 10px; display: none;">
+                                            <textarea id="customMessage" class="form-control" rows="3" placeholder="输入支付成功后显示的自定义消息"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <label class="pure-radio">
+                                        <input type="radio" name="postPaymentAction" value="redirect"> 
+                                        不显示确认页面，跳转到网站
+                                    </label>
+                                    
+                                    <div id="redirectUrlField" style="margin-left: 25px; margin-top: 10px; display: none;">
+                                        <label for="redirectUrl">跳转网址</label>
+                                        <input type="url" id="redirectUrl" class="form-control" placeholder="https://example.com/thank-you">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="pure-u-1-2">
-                                <div class="form-group">
-                                    <label for="dynamic_maxUsage">使用次数限制</label>
-                                    <input type="number" id="dynamic_maxUsage" class="form-control" min="1" max="1000">
-                                    <small>留空表示不限制次数</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>支付方式</label>
-                        <div class="alert alert-info">
-                            默认支持所有可用的支付方式，包括信用卡支付、Apple Pay和本地支付方式。
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="pure-modal-footer">
-                <button type="button" class="pure-button secondary-button" onclick="closeDynamicModal()">取消</button>
-                <button type="button" class="pure-button primary-button" id="submitDynamicPayment">创建链接</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- 添加创建产品模态框 -->
-    <div id="createProductModal" class="pure-modal">
-        <div class="pure-modal-overlay" onclick="closeProductModal()"></div>
-        <div class="pure-modal-container">
-            <div class="pure-modal-header">
-                <h4>创建产品</h4>
-                <button class="pure-modal-close" onclick="closeProductModal()">×</button>
-            </div>
-            <div class="pure-modal-body">
-                <form id="createProductForm" class="pure-form pure-form-stacked">
-                    <!-- 基础信息 -->
-                    <h5>基础信息</h5>
-                    <hr>
-                    
-                    <div class="form-group">
-                        <label for="productName">商品名称 *</label>
-                        <input type="text" id="productName" class="form-control" required maxlength="50">
-                        <small>最多50个字符</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="productDescription">商品描述</label>
-                        <textarea id="productDescription" class="form-control" rows="3" maxlength="200"></textarea>
-                        <small>最多200个字符，描述仅显示在商户管理界面</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="productImage">商品图片</label>
-                        <input type="file" id="productImage" class="form-control" accept="image/png, image/jpeg">
-                        <small>支持JPG/PNG，最大2MB</small>
-                    </div>
-                    
-                    <!-- 价格设置 -->
-                    <h5 style="margin-top: 20px;">价格设置 *</h5>
-                    <hr>
-                    
-                    <div class="pure-g">
-                        <div class="pure-u-1-2">
+                            <!-- 在表单中添加或确认这些单选按钮存在 -->
                             <div class="form-group">
-                                <label for="productPrice">价格 *</label>
-                                <input type="number" id="productPrice" class="form-control" step="0.01" min="0.01" required>
+                                <label>金额类型</label>
+                                <div>
+                                    <label class="pure-radio">
+                                        <input type="radio" name="amountType" value="FIXED" checked> 固定金额
+                                    </label>
+                                    <label class="pure-radio">
+                                        <input type="radio" name="amountType" value="DYNAMIC"> 动态金额
+                                    </label>
+                                </div>
                             </div>
-                        </div>
-                        <div class="pure-u-1-2">
+
                             <div class="form-group">
-                                <label for="productCurrency">货币 *</label>
-                                <select id="productCurrency" class="form-control" required>
-                                    <option value="USD">美元 (USD)</option>
-                                    <option value="EUR">欧元 (EUR)</option>
-                                    <option value="JPY">日元 (JPY)</option>
-                                    <option value="CNY">人民币 (CNY)</option>
-                                </select>
+                                <label>有效期</label>
+                                <div>
+                                    <label class="pure-radio">
+                                        <input type="radio" name="validityType" value="PERMANENT" checked> 永久有效
+                                    </label>
+                                    <label class="pure-radio">
+                                        <input type="radio" name="validityType" value="FIXED"> 指定截止日期
+                                    </label>
+                                </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
-                </form>
+                    <div class="pure-modal-footer">
+                        <button type="button" class="pure-button secondary-button" onclick="closeModal()">取消</button>
+                        <button type="button" class="pure-button primary-button" id="submitLinkForm">创建链接</button>
+                    </div>
+                </div>
             </div>
-            <div class="pure-modal-footer">
-                <button type="button" class="pure-button secondary-button" onclick="closeProductModal()">取消</button>
-                <button type="button" class="pure-button primary-button" id="submitProductForm">创建产品</button>
+
+            <!-- 在页面底部添加手动付款模态框 -->
+            <div id="manualPaymentModal" class="pure-modal">
+                <div class="pure-modal-overlay" onclick="closeManualModal()"></div>
+                <div class="pure-modal-container">
+                    <div class="pure-modal-header">
+                        <h4>手动付款</h4>
+                        <button class="pure-modal-close" onclick="closeManualModal()">×</button>
+                    </div>
+                    <div class="pure-modal-body">
+                        <form id="manualPaymentForm" class="pure-form pure-form-stacked">
+                            <!-- 商品信息 -->
+                            <h5>商品信息</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label for="manual_title">商品名称 *</label>
+                                <input type="text" id="manual_title" class="form-control" required maxlength="50">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="manual_productCode">商品编号 *</label>
+                                <input type="text" id="manual_productCode" class="form-control" required maxlength="20">
+                                <small>输入唯一商品编号，不可重复</small>
+                            </div>
+                            
+                            <div class="pure-g">
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="manual_amount">金额 *</label>
+                                        <input type="number" id="manual_amount" class="form-control" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="manual_currency">货币 *</label>
+                                        <select id="manual_currency" class="form-control" required>
+                                            <option value="USD">美元 (USD)</option>
+                                            <option value="EUR">欧元 (EUR)</option>
+                                            <option value="JPY">日元 (JPY)</option>
+                                            <option value="CNY">人民币 (CNY)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 客户信息 -->
+                            <h5 style="margin-top: 20px;">客户信息</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label for="customer_name">客户姓名 *</label>
+                                <input type="text" id="customer_name" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="customer_email">客户邮箱</label>
+                                <input type="email" id="customer_email" class="form-control">
+                            </div>
+                            
+                            <!-- 卡片信息 -->
+                            <h5 style="margin-top: 20px;">支付卡信息</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label for="card_number">卡号 *</label>
+                                <input type="text" id="card_number" class="form-control" required placeholder="XXXX XXXX XXXX XXXX">
+                            </div>
+                            
+                            <div class="pure-g">
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="card_expiry">有效期 *</label>
+                                        <input type="text" id="card_expiry" class="form-control" required placeholder="MM/YY">
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="card_cvc">安全码 *</label>
+                                        <input type="text" id="card_cvc" class="form-control" required placeholder="CVC">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="pure-modal-footer">
+                        <button type="button" class="pure-button secondary-button" onclick="closeManualModal()">取消</button>
+                        <button type="button" class="pure-button primary-button" id="submitManualPayment">处理付款</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 在页面底部添加动态金额付款模态框 -->
+            <div id="dynamicPaymentModal" class="pure-modal">
+                <div class="pure-modal-overlay" onclick="closeDynamicModal()"></div>
+                <div class="pure-modal-container">
+                    <div class="pure-modal-header">
+                        <h4>创建动态金额付款链接</h4>
+                        <button class="pure-modal-close" onclick="closeDynamicModal()">×</button>
+                    </div>
+                    <div class="pure-modal-body">
+                        <form id="dynamicPaymentForm" class="pure-form pure-form-stacked">
+                            <!-- 基础信息 -->
+                            <h5>基础信息</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label for="dynamic_title">商品名称 *</label>
+                                <input type="text" id="dynamic_title" class="form-control" required maxlength="50">
+                                <small>最多50个字符</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="dynamic_description">商品描述</label>
+                                <textarea id="dynamic_description" class="form-control" rows="3" maxlength="200"></textarea>
+                                <small>最多200个字符，描述仅显示在商户管理界面</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="dynamic_productCode">商品编号 *</label>
+                                <input type="text" id="dynamic_productCode" class="form-control" required maxlength="20">
+                                <small>输入唯一商品编号，不可重复</small>
+                            </div>
+                            
+                            <!-- 金额设置 -->
+                            <h5 style="margin-top: 20px;">金额设置</h5>
+                            <hr>
+                            
+                            <div class="pure-g">
+                                <div class="pure-u-1-3">
+                                    <div class="form-group">
+                                        <label for="dynamic_minAmount">最小金额</label>
+                                        <input type="number" id="dynamic_minAmount" class="form-control" step="0.01" min="0.01">
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-3">
+                                    <div class="form-group">
+                                        <label for="dynamic_maxAmount">最大金额</label>
+                                        <input type="number" id="dynamic_maxAmount" class="form-control" step="0.01" min="0.01">
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-3">
+                                    <div class="form-group">
+                                        <label for="dynamic_currency">货币 *</label>
+                                        <select id="dynamic_currency" class="form-control" required>
+                                            <option value="USD">美元 (USD)</option>
+                                            <option value="EUR">欧元 (EUR)</option>
+                                            <option value="JPY">日元 (JPY)</option>
+                                            <option value="CNY">人民币 (CNY)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 高级设置 -->
+                            <h5 style="margin-top: 20px;">高级设置</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label>有效期设置</label>
+                                <div class="pure-g">
+                                    <div class="pure-u-1-2">
+                                        <label class="pure-radio">
+                                            <input type="radio" name="dynamic_validityType" value="PERMANENT" checked> 永久有效
+                                        </label>
+                                    </div>
+                                    <div class="pure-u-1-2">
+                                        <label class="pure-radio">
+                                            <input type="radio" name="dynamic_validityType" value="FIXED"> 设置有效期
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="dynamicValidityFields" style="display: none;">
+                                <div class="pure-g">
+                                    <div class="pure-u-1-2">
+                                        <div class="form-group">
+                                            <label for="dynamic_endDate">截止日期</label>
+                                            <input type="date" id="dynamic_endDate" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="pure-u-1-2">
+                                        <div class="form-group">
+                                            <label for="dynamic_maxUsage">使用次数限制</label>
+                                            <input type="number" id="dynamic_maxUsage" class="form-control" min="1" max="1000">
+                                            <small>留空表示不限制次数</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>支付方式</label>
+                                <div class="alert alert-info">
+                                    默认支持所有可用的支付方式，包括信用卡支付、Apple Pay和本地支付方式。
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="pure-modal-footer">
+                        <button type="button" class="pure-button secondary-button" onclick="closeDynamicModal()">取消</button>
+                        <button type="button" class="pure-button primary-button" id="submitDynamicPayment">创建链接</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 添加创建产品模态框 -->
+            <div id="createProductModal" class="pure-modal">
+                <div class="pure-modal-overlay" onclick="closeProductModal()"></div>
+                <div class="pure-modal-container">
+                    <div class="pure-modal-header">
+                        <h4>创建产品</h4>
+                        <button class="pure-modal-close" onclick="closeProductModal()">×</button>
+                    </div>
+                    <div class="pure-modal-body">
+                        <form id="createProductForm" class="pure-form pure-form-stacked">
+                            <!-- 基础信息 -->
+                            <h5>基础信息</h5>
+                            <hr>
+                            
+                            <div class="form-group">
+                                <label for="productName">商品名称 *</label>
+                                <input type="text" id="productName" class="form-control" required maxlength="50">
+                                <small>最多50个字符</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="productDescription">商品描述</label>
+                                <textarea id="productDescription" class="form-control" rows="3" maxlength="200"></textarea>
+                                <small>最多200个字符，描述仅显示在商户管理界面</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="productImage">商品图片</label>
+                                <input type="file" id="productImage" class="form-control" accept="image/png, image/jpeg">
+                                <small>支持JPG/PNG，最大2MB</small>
+                            </div>
+                            
+                            <!-- 价格设置 -->
+                            <h5 style="margin-top: 20px;">价格设置 *</h5>
+                            <hr>
+                            
+                            <div class="pure-g">
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="productPrice">价格 *</label>
+                                        <input type="number" id="productPrice" class="form-control" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <div class="pure-u-1-2">
+                                    <div class="form-group">
+                                        <label for="productCurrency">货币 *</label>
+                                        <select id="productCurrency" class="form-control" required>
+                                            <option value="USD">美元 (USD)</option>
+                                            <option value="EUR">欧元 (EUR)</option>
+                                            <option value="JPY">日元 (JPY)</option>
+                                            <option value="CNY">人民币 (CNY)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="pure-modal-footer">
+                        <button type="button" class="pure-button secondary-button" onclick="closeProductModal()">取消</button>
+                        <button type="button" class="pure-button primary-button" id="submitProductForm">创建产品</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
     <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
     <script>
         // 1. 确保这些函数在全局作用域内定义，并在DOM加载前
         function toggleDropdown() {

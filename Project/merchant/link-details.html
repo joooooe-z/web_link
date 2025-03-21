@@ -8,177 +8,205 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/merchant.css">
+    <link rel="stylesheet" href="../css/new-nav.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="dashboard.html">Onerway 商户中心</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">控制台</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="manage-links.html">管理链接</a>
-                    </li>
-                </ul>
+    <div class="app-container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo-sm.png" alt="Onerway Logo" class="sidebar-logo">
+                <h3>商户中心</h3>
             </div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item active">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <i class="nav-icon">📊</i>
+                        <span>控制台</span>
+                    </a>
+                    <!-- 控制台子菜单 -->
+                    <ul class="sidebar-subnav">
+                        <li class="sidebar-subnav-item active">
+                            <a href="manage-links.html" class="sidebar-subnav-link">管理链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- 预留订阅功能导航入口 -->
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">🔄</i>
+                        <span>订阅管理</span>
+                    </a>
+                    <!-- 订阅管理子菜单 -->
+                    <ul class="sidebar-subnav" style="display: none;">
+                        <li class="sidebar-subnav-item">
+                            <a href="#" class="sidebar-subnav-link">订阅链接</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#" class="sidebar-nav-link">
+                        <i class="nav-icon">⚙️</i>
+                        <span>设置</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-    </nav>
 
-    <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="dashboard.html">控制台</a></li>
-                        <li class="breadcrumb-item"><a href="manage-links.html">管理链接</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">链接详情</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0" id="linkTitle">加载中...</h4>
-                        <div class="btn-group">
-                            <button class="btn btn-outline-primary" id="shareBtn">
-                                <i class="bi bi-share"></i> 分享
-                            </button>
-                            <button class="btn btn-outline-secondary" id="toggleStatusBtn">
-                                <i class="bi bi-pause-circle"></i> 禁用
-                            </button>
-                            <button class="btn btn-outline-danger" id="deleteBtn">
-                                <i class="bi bi-trash"></i> 删除
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>基本信息</h5>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>状态</span>
-                                        <span id="linkStatus" class="badge bg-success">活跃</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>创建时间</span>
-                                        <span id="linkCreatedAt">--</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>金额类型</span>
-                                        <span id="linkAmountType">--</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>金额</span>
-                                        <span id="linkAmount">--</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>有效期</span>
-                                        <span id="linkValidityType">--</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>截止时间</span>
-                                        <span id="linkEndTime">--</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                        <span>商品编号</span>
-                                        <span id="linkProductCode">--</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <div id="productImage" class="text-center mb-3">
-                                    <!-- 商品图片将在这里显示 -->
-                                </div>
-                                <p id="linkDescription" class="text-muted">加载中...</p>
-                            </div>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="row link-stats">
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="linkVisits">0</div>
-                                    <div class="stat-label">总访问次数</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="linkConversions">0</div>
-                                    <div class="stat-label">支付次数</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="linkTotalAmount">¥0.00</div>
-                                    <div class="stat-label">总收款金额</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <canvas id="transactionsChart" height="200"></canvas>
-                            </div>
-                        </div>
-                        
-                        <h5>交易记录</h5>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>交易ID</th>
-                                        <th>金额</th>
-                                        <th>支付方式</th>
-                                        <th>时间</th>
-                                        <th>状态</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="transactionsTable">
-                                    <tr>
-                                        <td colspan="5" class="text-center">加载中...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <div class="container mt-4">
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="dashboard.html">控制台</a></li>
+                                <li class="breadcrumb-item"><a href="manage-links.html">管理链接</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">链接详情</li>
+                            </ol>
+                        </nav>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">收款链接</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="paymentLinkUrl" readonly>
-                                <button class="btn btn-outline-primary" type="button" id="copyLinkBtn">
-                                    <i class="bi bi-clipboard"></i> 复制链接
-                                </button>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h4 class="mb-0" id="linkTitle">加载中...</h4>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary" id="shareBtn">
+                                        <i class="bi bi-share"></i> 分享
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="toggleStatusBtn">
+                                        <i class="bi bi-pause-circle"></i> 禁用
+                                    </button>
+                                    <button class="btn btn-outline-danger" id="deleteBtn">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>基本信息</h5>
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>状态</span>
+                                                <span id="linkStatus" class="badge bg-success">活跃</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>创建时间</span>
+                                                <span id="linkCreatedAt">--</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>金额类型</span>
+                                                <span id="linkAmountType">--</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>金额</span>
+                                                <span id="linkAmount">--</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>有效期</span>
+                                                <span id="linkValidityType">--</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>截止时间</span>
+                                                <span id="linkEndTime">--</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                                <span>商品编号</span>
+                                                <span id="linkProductCode">--</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="productImage" class="text-center mb-3">
+                                            <!-- 商品图片将在这里显示 -->
+                                        </div>
+                                        <p id="linkDescription" class="text-muted">加载中...</p>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="row link-stats">
+                                    <div class="col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-number" id="linkVisits">0</div>
+                                            <div class="stat-label">总访问次数</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-number" id="linkConversions">0</div>
+                                            <div class="stat-label">支付次数</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-number" id="linkTotalAmount">¥0.00</div>
+                                            <div class="stat-label">总收款金额</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-12">
+                                        <canvas id="transactionsChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <h5>交易记录</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>交易ID</th>
+                                                <th>金额</th>
+                                                <th>支付方式</th>
+                                                <th>时间</th>
+                                                <th>状态</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="transactionsTable">
+                                            <tr>
+                                                <td colspan="5" class="text-center">加载中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="text-center mb-3">
-                            <div id="linkQrCode" class="d-inline-block"></div>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <a href="#" class="btn btn-primary" id="testLinkBtn">
-                                <i class="bi bi-box-arrow-up-right"></i> 测试链接
-                            </a>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">收款链接</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="paymentLinkUrl" readonly>
+                                        <button class="btn btn-outline-primary" type="button" id="copyLinkBtn">
+                                            <i class="bi bi-clipboard"></i> 复制链接
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center mb-3">
+                                    <div id="linkQrCode" class="d-inline-block"></div>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <a href="#" class="btn btn-primary" id="testLinkBtn">
+                                        <i class="bi bi-box-arrow-up-right"></i> 测试链接
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -217,6 +245,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/storage.js"></script>
+    <script src="../js/navigation.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 获取链接ID
